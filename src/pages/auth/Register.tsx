@@ -11,21 +11,32 @@ import {
   alpha,
   InputAdornment,
   IconButton,
-  useMediaQuery,
-  Link
+  useMediaQuery
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Person as PersonIcon, Lock as LockIcon, Visibility, VisibilityOff, PersonAddAlt, HelpOutline } from '@mui/icons-material';
+import { 
+  Person as PersonIcon, 
+  Lock as LockIcon, 
+  Email as EmailIcon,
+  Visibility, 
+  VisibilityOff,
+  ArrowBack as ArrowBackIcon 
+} from '@mui/icons-material';
 
-const Login: React.FC = () => {
+const Register: React.FC = () => {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { login, loading, error, clearErrors } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const { register, loading } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate();
 
   useEffect(() => {
     setMounted(true);
@@ -33,11 +44,41 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(username, password);
+    setError(null);
+
+    // バリデーション
+    if (!username || !email || !password || !confirmPassword) {
+      setError('すべての項目を入力してください');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('パスワードが一致していません');
+      return;
+    }
+
+    // メールアドレスの簡易バリデーション
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('有効なメールアドレスを入力してください');
+      return;
+    }
+
+    try {
+      await register(username, email, password);
+      // 登録成功時にログインページへリダイレクト
+      navigate('/login', { state: { message: '登録が完了しました。ログインしてください。' } });
+    } catch (err) {
+      setError('登録に失敗しました。もう一度お試しください。');
+    }
   };
 
   const handleTogglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleToggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
   };
 
   return (
@@ -144,50 +185,37 @@ const Login: React.FC = () => {
 
           <Box
             sx={{
-              textAlign: 'center',
-              mb: 4,
-              pt: 1,
+              display: 'flex',
+              alignItems: 'center',
+              mb: 3,
               opacity: mounted ? 1 : 0,
-              transform: mounted ? 'translateY(0)' : 'translateY(10px)',
+              transform: mounted ? 'translateX(0)' : 'translateX(-10px)',
               transition: 'opacity 0.5s ease-out 0.2s, transform 0.5s ease-out 0.2s',
             }}
           >
+            <RouterLink 
+              to="/login" 
+              style={{ 
+                color: theme.palette.text.secondary,
+                display: 'flex',
+                alignItems: 'center',
+                textDecoration: 'none',
+                marginRight: '10px'
+              }}
+            >
+              <ArrowBackIcon fontSize="small" />
+            </RouterLink>
             <Typography 
               variant="h4" 
               component="h1" 
-              gutterBottom 
               sx={{ 
                 fontWeight: 700,
                 letterSpacing: '-0.5px',
                 color: theme.palette.text.primary,
-                mb: 0.5,
                 fontSize: { xs: '1.8rem', sm: '2.2rem' },
               }}
             >
-              ポートフォリオアプリ
-            </Typography>
-            <Typography 
-              variant="h5" 
-              component="h2" 
-              sx={{
-                color: theme.palette.primary.main,
-                fontWeight: 600,
-                fontSize: { xs: '1.3rem', sm: '1.5rem' },
-                position: 'relative',
-                display: 'inline-block',
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  bottom: -4,
-                  left: '25%',
-                  width: '50%',
-                  height: 2,
-                  backgroundColor: alpha(theme.palette.primary.main, 0.4),
-                  borderRadius: 2,
-                }
-              }}
-            >
-              ログイン
+              会員登録
             </Typography>
           </Box>
 
@@ -203,8 +231,7 @@ const Login: React.FC = () => {
                   '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-5px)' },
                   '20%, 40%, 60%, 80%': { transform: 'translateX(5px)' }
                 }
-              }} 
-              onClose={clearErrors}
+              }}
             >
               {error}
             </Alert>
@@ -215,13 +242,15 @@ const Login: React.FC = () => {
             onSubmit={handleSubmit} 
             noValidate
             sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2.5,
               opacity: mounted ? 1 : 0,
               transform: mounted ? 'translateY(0)' : 'translateY(10px)',
               transition: 'opacity 0.5s ease-out 0.4s, transform 0.5s ease-out 0.4s',
             }}
           >
             <TextField
-              margin="normal"
               required
               fullWidth
               id="username"
@@ -240,7 +269,6 @@ const Login: React.FC = () => {
                 ),
               }}
               sx={{
-                mb: 3,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
                   '&:hover .MuiOutlinedInput-notchedOutline': {
@@ -249,15 +277,43 @@ const Login: React.FC = () => {
                 },
               }}
             />
+            
             <TextField
-              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="メールアドレス"
+              name="email"
+              autoComplete="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailIcon color="primary" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: theme.palette.primary.main,
+                  },
+                },
+              }}
+            />
+            
+            <TextField
               required
               fullWidth
               name="password"
               label="パスワード"
               type={showPassword ? 'text' : 'password'}
               id="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
@@ -280,7 +336,45 @@ const Login: React.FC = () => {
                 )
               }}
               sx={{
-                mb: 4,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: theme.palette.primary.main,
+                  },
+                },
+              }}
+            />
+            
+            <TextField
+              required
+              fullWidth
+              name="confirmPassword"
+              label="パスワード（確認）"
+              type={showConfirmPassword ? 'text' : 'password'}
+              id="confirmPassword"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={loading}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon color="primary" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="確認用パスワードの表示切り替え"
+                      onClick={handleToggleConfirmPasswordVisibility}
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+              sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
                   '&:hover .MuiOutlinedInput-notchedOutline': {
@@ -299,6 +393,7 @@ const Login: React.FC = () => {
               disabled={loading}
               sx={{ 
                 py: 1.5,
+                mt: 1,
                 fontSize: '1rem',
                 fontWeight: 600,
                 borderRadius: 2,
@@ -316,64 +411,28 @@ const Login: React.FC = () => {
                 },
               }}
             >
-              {loading ? 'ログイン中...' : 'ログイン'}
+              {loading ? '登録中...' : '登録する'}
             </Button>
             
             <Box 
               sx={{ 
                 display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center',
-                gap: 1.5,
-                mt: 4,
-                opacity: mounted ? 1 : 0,
-                transform: mounted ? 'translateY(0)' : 'translateY(10px)',
-                transition: 'opacity 0.5s ease-out 0.5s, transform 0.5s ease-out 0.5s',
+                justifyContent: 'center',
+                mt: 2
               }}
             >
-              <Link 
-                component={RouterLink} 
-                to="/register" 
-                variant="body2"
-                sx={{ 
+              <RouterLink 
+                to="/login" 
+                style={{ 
+                  textDecoration: 'none',
                   color: theme.palette.primary.main,
                   fontWeight: 500,
                   fontSize: '0.9rem',
-                  textDecoration: 'none',
                   transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  '&:hover': {
-                    color: theme.palette.primary.dark,
-                    transform: 'translateY(-1px)',
-                  }
                 }}
               >
-                <PersonAddAlt sx={{ mr: 0.5, fontSize: '1rem' }} />
-                会員登録はこちら
-              </Link>
-              
-              <Link 
-                component={RouterLink} 
-                to="/forgot-password" 
-                variant="body2"
-                sx={{ 
-                  color: theme.palette.text.secondary,
-                  fontWeight: 500,
-                  fontSize: '0.9rem',
-                  textDecoration: 'none',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  '&:hover': {
-                    color: theme.palette.primary.main,
-                    transform: 'translateY(-1px)',
-                  }
-                }}
-              >
-                <HelpOutline sx={{ mr: 0.5, fontSize: '1rem' }} />
-                パスワードを忘れてしまった方はこちら
-              </Link>
+                アカウントをお持ちの方はログイン
+              </RouterLink>
             </Box>
           </Box>
         </Paper>
@@ -396,4 +455,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login; 
+export default Register; 

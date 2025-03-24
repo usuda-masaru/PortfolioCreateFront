@@ -1,16 +1,22 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // コンポーネント
 import Login from './pages/auth/Login';
-import Dashboard from './pages/dashboard/Dashboard';
+import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
 import DashboardLayout from './components/layout/DashboardLayout';
-import Portfolio from './pages/public/Portfolio';
+import Dashboard from './pages/dashboard/Dashboard';
 import ProfileEdit from './pages/dashboard/ProfileEdit';
 import SkillsEdit from './pages/dashboard/SkillsEdit';
 import ProcessEdit from './pages/dashboard/ProcessEdit';
+import WorkExperienceEdit from './pages/dashboard/WorkExperienceEdit';
+import EducationEdit from './pages/dashboard/EducationEdit';
+import GitHubManagement from './pages/dashboard/github/GitHubManagement';
+import QiitaEdit from './pages/dashboard/QiitaEdit';
+import Portfolio from './pages/public/Portfolio';
 
 // カスタムテーマ
 const theme = createTheme({
@@ -58,17 +64,26 @@ function App() {
           <Routes>
             {/* 認証ルート */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             
             {/* ダッシュボードルート */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <DashboardLayout />
-              </ProtectedRoute>
-            }>
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<Dashboard />} />
               <Route path="profile" element={<ProfileEdit />} />
               <Route path="skills" element={<SkillsEdit />} />
               <Route path="process" element={<ProcessEdit />} />
+              <Route path="work-experience" element={<WorkExperienceEdit />} />
+              <Route path="education" element={<EducationEdit />} />
+              <Route path="github" element={<GitHubManagement />} />
+              <Route path="qiita" element={<QiitaEdit />} />
               {/* 他のダッシュボードルートはここに追加 */}
             </Route>
             

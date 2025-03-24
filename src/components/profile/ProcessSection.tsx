@@ -24,12 +24,13 @@ ChartJS.register(
 
 // 担当工程の種類と表示名の定義
 const PROCESS_TYPES = [
-  { value: 'requirement', label: '要件定義', description: '顧客要件の分析と仕様のまとめ' },
+  { value: 'requirements', label: '要件定義', description: '顧客要件の分析と仕様のまとめ' },
   { value: 'basic_design', label: '基本設計', description: 'システム全体のアーキテクチャと基本機能の設計' },
   { value: 'detailed_design', label: '詳細設計', description: '各機能の詳細な実装方法の設計' },
   { value: 'implementation', label: '実装', description: 'コーディングとユニットテスト' },
   { value: 'testing', label: '試験', description: '結合テスト、システムテスト、受入テスト' },
-  { value: 'operation', label: '運用', description: 'システム運用、保守、トラブルシューティング' },
+  { value: 'deployment', label: 'デプロイ/リリース', description: 'システムのリリースと導入' },
+  { value: 'operation', label: '運用/保守', description: 'システム運用、保守、トラブルシューティング' },
 ];
 
 // 担当工程の経験データ型定義

@@ -9,10 +9,13 @@ import { profileAPI } from '../../services/api';
 
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import SkillsSection from '../../components/profile/SkillsSection';
+import ProcessExperiencesSection from '../../components/profile/ProcessExperiencesSection';
 import ProjectsSection from '../../components/profile/ProjectsSection';
 import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
 import ContactSection from '../../components/profile/ContactSection';
+import GitHubRepositoriesSection from '../../components/profile/GitHubRepositoriesSection';
+import QiitaArticlesSection from '../../components/profile/QiitaArticlesSection';
 
 // セクションコンポーネントのためのラッパー
 interface SectionProps {
@@ -157,7 +160,13 @@ const Portfolio: React.FC = () => {
         
         <Box sx={{ mt: 4 }}>
           <SectionContainer title="スキル">
-            <SkillsSection skills={profile.skills || []} processExperiences={profile.process_experiences || []} />
+            <SkillsSection skills={profile.skills || []} />
+          </SectionContainer>
+        </Box>
+
+        <Box sx={{ mt: 4 }}>
+          <SectionContainer title="担当工程">
+            <ProcessExperiencesSection processExperiences={profile.process_experiences || []} />
           </SectionContainer>
         </Box>
 
@@ -168,7 +177,7 @@ const Portfolio: React.FC = () => {
         </Box>
 
         <Box sx={{ mt: 4 }}>
-          <SectionContainer title="職歴">
+          <SectionContainer title="職務経歴">
             <ExperienceSection experiences={profile.work_experiences || []} />
           </SectionContainer>
         </Box>
@@ -178,6 +187,22 @@ const Portfolio: React.FC = () => {
             <EducationSection education={profile.education || []} />
           </SectionContainer>
         </Box>
+
+        {profile.github_repositories && profile.github_repositories.length > 0 && (
+          <Box sx={{ mt: 4 }}>
+            <SectionContainer title="GitHubリポジトリ">
+              <GitHubRepositoriesSection repositories={profile.github_repositories} />
+            </SectionContainer>
+          </Box>
+        )}
+
+        {profile.qiita_articles && profile.qiita_articles.length > 0 && (
+          <Box sx={{ mt: 4 }}>
+            <SectionContainer title="Qiita記事">
+              <QiitaArticlesSection articles={profile.qiita_articles} />
+            </SectionContainer>
+          </Box>
+        )}
 
         <Box sx={{ mt: 4, mb: 4 }}>
           <SectionContainer title="連絡先">

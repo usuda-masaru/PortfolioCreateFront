@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { 
   UserProfile, PublicProfile, Skill, SkillCategory, 
-  Project, Education, WorkExperience 
+  Project, Education, WorkExperience, QiitaArticle
 } from '../types/interfaces';
 
 // バックエンドAPIのエンドポイント
@@ -15,7 +15,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  withCredentials: true
+  withCredentials: false
 });
 
 // リクエスト時のインターセプター（デバッグ用）
@@ -46,6 +46,9 @@ api.interceptors.response.use(
   },
   error => {
     console.error('API レスポンスエラー:', error.response || error);
+    if (error.response && error.response.data) {
+      console.log('詳細エラーデータ:', error.response.data);
+    }
     return Promise.reject(error);
   }
 );
@@ -63,24 +66,114 @@ export const authAPI = {
     return response.data;
   },
   register: async (userData: any) => {
-    const response = await api.post('/api/register/', userData);
-    return response.data;
+    try {
+      console.log('Registering user with data:', userData);
+      const response = await api.post('/api/register/', userData);
+      console.log('Registration successful, response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  },
+  logout: async () => {
+    try {
+      // トークンが無効になるようにバックエンドに通知
+      // Djangoではトークンの無効化エンドポイントが必要です
+      // エンドポイントが存在する場合は以下のコメントを外してください
+      // await api.post('/api/logout/');
+      
+      // ログアウト処理はフロントエンド側でも行う
+      return { success: true };
+    } catch (error) {
+      console.error('Logout error:', error);
+      // バックエンドでエラーが発生しても、フロントエンドでは正常にログアウト処理を続行
+      return { success: true };
+    }
   },
   getMyProfile: async () => {
-    const response = await api.get<UserProfile>('/api/profiles/me/');
-    return response.data;
+    try {
+      console.log("Fetching profile from authAPI.getMyProfile");
+      const response = await api.get<UserProfile>('/api/profiles/me/');
+      console.log("Profile data received:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error in authAPI.getMyProfile:", error);
+      throw error;
+    }
   },
 };
 
 // プロフィール関連の API 呼び出し
 export const profileAPI = {
-  getPublicProfile: async (slug: string) => {
-    const response = await api.get<PublicProfile>(`/api/profile/${slug}/`);
-    return response.data;
+  getPublicProfile: async (slug: string): Promise<PublicProfile> => {
+    try {
+      const response = await api.get<PublicProfile>(`/api/profiles/public/${slug}/`);
+      
+      // 開発モードでQiita記事サンプルデータを追加
+      if (process.env.NODE_ENV === 'development') {
+        // ローカル開発中はレスポンスにQiita記事サンプルを追加
+        response.data.qiita_articles = [
+          {
+            id: 'abc123',
+            title: 'Reactにおけるパフォーマンス最適化テクニック',
+            url: 'https://qiita.com/sample/items/abc123',
+            created_at: '2023-10-15T09:00:00+09:00',
+            updated_at: '2023-10-16T10:30:00+09:00',
+            likes_count: 125,
+            stocks_count: 78,
+            tags: ['React', 'JavaScript', 'パフォーマンス', 'フロントエンド'],
+            is_featured: true
+          },
+          {
+            id: 'def456',
+            title: 'TypeScriptの型システムを完全に理解する',
+            url: 'https://qiita.com/sample/items/def456',
+            created_at: '2023-09-20T14:30:00+09:00',
+            updated_at: '2023-09-22T11:15:00+09:00',
+            likes_count: 210,
+            stocks_count: 145,
+            tags: ['TypeScript', '型システム', 'JavaScript']
+          },
+          {
+            id: 'ghi789',
+            title: 'Next.jsとMaterial UIでモダンなWebアプリを構築する方法',
+            url: 'https://qiita.com/sample/items/ghi789',
+            created_at: '2023-08-05T16:45:00+09:00',
+            updated_at: '2023-08-07T09:20:00+09:00',
+            likes_count: 89,
+            stocks_count: 53,
+            tags: ['Next.js', 'Material UI', 'React', 'Web開発']
+          },
+          {
+            id: 'jkl012',
+            title: 'GraphQLとApollo Clientを使った効率的なAPI設計',
+            url: 'https://qiita.com/sample/items/jkl012',
+            created_at: '2023-07-12T11:20:00+09:00',
+            updated_at: '2023-07-14T13:40:00+09:00',
+            likes_count: 67,
+            stocks_count: 41,
+            tags: ['GraphQL', 'Apollo', 'API設計', 'バックエンド']
+          }
+        ];
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching public profile:', error);
+      throw error;
+    }
   },
   getMyProfile: async () => {
-    const response = await api.get<UserProfile>('/api/profiles/me/');
-    return response.data;
+    try {
+      console.log("Fetching profile from profileAPI.getMyProfile");
+      const response = await api.get<UserProfile>('/api/profiles/me/');
+      console.log("Profile data received:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error in profileAPI.getMyProfile:", error);
+      throw error;
+    }
   },
   updateProfile: async (profileData: Partial<UserProfile>) => {
     // IDを取り除いた新しいオブジェクトを作成
@@ -105,7 +198,8 @@ export const profileAPI = {
     }
     
     try {
-      const response = await api.put<UserProfile>(`/api/profiles/${id}/`, updatableData);
+      // PUTの代わりにPATCHを使用（部分更新）
+      const response = await api.patch<UserProfile>(`/api/profiles/${id}/`, updatableData);
       return response.data;
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -300,40 +394,235 @@ export const projectAPI = {
 
 // 学歴関連の API 呼び出し
 export const educationAPI = {
-  getEducation: async () => {
-    const response = await api.get<Education[]>('/api/education/');
-    return response.data;
+  // 学歴一覧取得
+  getEducation: async (): Promise<Education[]> => {
+    try {
+      const response = await api.get<Education[]>('/api/education/');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch education data', error);
+      throw error;
+    }
   },
-  createEducation: async (educationData: Partial<Education>) => {
-    const response = await api.post<Education>('/api/education/', educationData);
-    return response.data;
+
+  // 学歴作成
+  createEducation: async (data: Partial<Education>): Promise<Education> => {
+    try {
+      const response = await api.post<Education>('/api/education/', data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create education', error);
+      throw error;
+    }
   },
-  updateEducation: async (educationData: Partial<Education>) => {
-    const response = await api.patch<Education>(`/api/education/${educationData.id}/`, educationData);
-    return response.data;
+
+  // 学歴更新
+  updateEducation: async (data: Partial<Education>): Promise<Education> => {
+    try {
+      if (!data.id) {
+        throw new Error('Education ID is required for update');
+      }
+      const response = await api.put<Education>(`/api/education/${data.id}/`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update education', error);
+      throw error;
+    }
   },
-  deleteEducation: async (id: number) => {
-    await api.delete(`/api/education/${id}/`);
+
+  // 学歴削除
+  deleteEducation: async (id: number): Promise<void> => {
+    try {
+      await api.delete(`/api/education/${id}/`);
+    } catch (error) {
+      console.error('Failed to delete education', error);
+      throw error;
+    }
+  },
+
+  // 学歴の順序更新
+  updateEducationOrder: async (ids: number[]): Promise<void> => {
+    try {
+      await api.post('/api/education/update_order/', { ids });
+    } catch (error) {
+      console.error('Failed to update education order', error);
+      throw error;
+    }
   },
 };
 
-// 職歴関連の API 呼び出し
+// 職務経歴関連のAPI呼び出し
 export const workExperienceAPI = {
-  getWorkExperiences: async () => {
-    const response = await api.get<WorkExperience[]>('/api/work-experiences/');
-    return response.data;
+  // 職務経歴一覧を取得する
+  getWorkExperiences: async (): Promise<WorkExperience[]> => {
+    try {
+      const response = await api.get<WorkExperience[]>('/api/work-experiences/');
+      return response.data;
+    } catch (error) {
+      console.error('職務経歴の取得エラー:', error);
+      throw error;
+    }
   },
-  createWorkExperience: async (workExpData: Partial<WorkExperience>) => {
-    const response = await api.post<WorkExperience>('/api/work-experiences/', workExpData);
-    return response.data;
+
+  // 職務経歴を作成する
+  createWorkExperience: async (data: Partial<WorkExperience>): Promise<WorkExperience> => {
+    try {
+      console.log('新しい職務経歴を作成します:', data);
+      const response = await api.post<WorkExperience>('/api/work-experiences/', data);
+      return response.data;
+    } catch (error: any) {
+      console.error('職務経歴の作成エラー:', error);
+      // エラーレスポンスの詳細を表示
+      if (error.response && error.response.data) {
+        console.error('エラーレスポンスの詳細:', error.response.data);
+      }
+      throw error;
+    }
   },
-  updateWorkExperience: async (workExpData: Partial<WorkExperience>) => {
-    const response = await api.patch<WorkExperience>(`/api/work-experiences/${workExpData.id}/`, workExpData);
-    return response.data;
+
+  // 職務経歴を更新する
+  updateWorkExperience: async (data: Partial<WorkExperience>): Promise<WorkExperience> => {
+    if (!data.id) {
+      throw new Error('職務経歴IDがありません。更新できません。');
+    }
+    
+    try {
+      console.log(`職務経歴を更新します ID: ${data.id}`, data);
+      const response = await api.patch<WorkExperience>(`/api/work-experiences/${data.id}/`, data);
+      console.log('職務経歴更新成功:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('職務経歴の更新エラー:', error);
+      throw error;
+    }
   },
-  deleteWorkExperience: async (id: number) => {
-    await api.delete(`/api/work-experiences/${id}/`);
+
+  // 職務経歴を削除する
+  deleteWorkExperience: async (id: number): Promise<void> => {
+    try {
+      await api.delete(`/api/work-experiences/${id}/`);
+    } catch (error) {
+      console.error('職務経歴の削除エラー:', error);
+      throw error;
+    }
   },
+  
+  // 職務経歴の並び順を更新する
+  updateOrder: async (orderedIds: number[]): Promise<void> => {
+    try {
+      await api.post('/api/work-experiences/update-order/', { order: orderedIds });
+    } catch (error) {
+      console.error('職務経歴の並び順更新エラー:', error);
+      throw error;
+    }
+  }
+};
+
+// GitHub連携関連のAPI呼び出し
+export const githubAPI = {
+  // GitHubリポジトリを取得する
+  getRepositories: async (): Promise<any[]> => {
+    try {
+      const response = await api.get<any[]>('/api/github-repositories/');
+      return response.data;
+    } catch (error: any) {
+      console.error('GitHubリポジトリの取得エラー:', error);
+      throw error;
+    }
+  },
+  
+  // GitHubリポジトリを同期する
+  syncRepositories: async (): Promise<any> => {
+    try {
+      const response = await api.post<any>('/api/github-repositories/sync/');
+      return response.data;
+    } catch (error: any) {
+      console.error('GitHubリポジトリの同期エラー:', error);
+      throw error;
+    }
+  },
+  
+  // リポジトリの特集フラグを切り替える
+  toggleFeatured: async (repoId: number): Promise<any> => {
+    try {
+      const response = await api.patch<any>(`/api/github-repositories/${repoId}/toggle_featured/`);
+      return response.data;
+    } catch (error: any) {
+      console.error('リポジトリの特集フラグ切り替えエラー:', error);
+      throw error;
+    }
+  },
+  
+  // GitHub連携認証URLを取得する
+  getOAuthUrl: (userId?: number, clientId?: string): string => {
+    // 引数で受け取ったClient IDを使用するか、なければ環境変数から取得
+    const githubClientId = clientId || process.env.REACT_APP_GITHUB_CLIENT_ID;
+    const redirectUri = encodeURIComponent(`${API_BASE_URL}/api/oauth/github/callback/`);
+    const scope = encodeURIComponent('repo user');
+    // ユーザーIDをstate引数として使用（ない場合はランダム文字列）
+    const state = userId ? userId.toString() : Math.random().toString(36).substring(2, 15);
+    
+    // ステートをローカルストレージに保存（コールバック時に検証）
+    localStorage.setItem('github_oauth_state', state);
+    
+    return `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
+  }
+};
+
+// Qiita連携関連のAPI呼び出し
+export const qiitaAPI = {
+  // Qiita記事一覧を取得する
+  getArticles: async (): Promise<QiitaArticle[]> => {
+    try {
+      const response = await api.get<QiitaArticle[]>('/api/qiita-articles/');
+      return response.data;
+    } catch (error) {
+      console.error('Qiita記事の取得エラー:', error);
+      throw error;
+    }
+  },
+  
+  // Qiita記事を同期する
+  syncArticles: async (): Promise<any> => {
+    try {
+      const response = await api.post<any>('/api/qiita-articles/sync/');
+      return response.data;
+    } catch (error) {
+      console.error('Qiita記事の同期エラー:', error);
+      throw error;
+    }
+  },
+  
+  // 記事の特集フラグを切り替える
+  toggleFeatured: async (articleId: string): Promise<any> => {
+    try {
+      const response = await api.patch<any>(`/api/qiita-articles/${articleId}/toggle_featured/`);
+      return response.data;
+    } catch (error) {
+      console.error('記事の特集フラグ切り替えエラー:', error);
+      throw error;
+    }
+  },
+  
+  // アクセストークンを更新する
+  updateAccessToken: async (accessToken: string): Promise<any> => {
+    try {
+      // まず現在のプロファイルを取得
+      const profileResponse = await api.get<UserProfile>('/api/profiles/me/');
+      const profile = profileResponse.data;
+      
+      if (!profile.id) {
+        throw new Error('プロファイルIDが取得できませんでした');
+      }
+      
+      // プロファイルIDを使って更新
+      const response = await api.patch<any>(`/api/profiles/${profile.id}/`, { qiita_access_token: accessToken });
+      return response.data;
+    } catch (error) {
+      console.error('Qiitaアクセストークン更新エラー:', error);
+      throw error;
+    }
+  }
 };
 
 export default api; 

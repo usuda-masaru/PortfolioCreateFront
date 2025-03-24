@@ -308,10 +308,9 @@ const IconDisplay: React.FC<{ iconId: string; size?: number }> = ({ iconId, size
 
 interface SkillsSectionProps {
   skills: SkillCategory[] | Skill[];
-  processExperiences: ProcessExperience[];
 }
 
-const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, processExperiences }) => {
+const SkillsSection: React.FC<SkillsSectionProps> = ({ skills }) => {
   const theme = useTheme();
 
   // スキルをカテゴリごとにグループ化
@@ -398,156 +397,120 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, processExperience
     );
   };
 
-  // 担当工程のレーダーチャートデータ
-  const processChartData = React.useMemo(() => {
-    if (!processExperiences || processExperiences.length === 0) {
-      return null;
-    }
-
-    const labels = processExperiences.map(exp => exp.process_type_display);
-    const data = processExperiences.map(exp => exp.experience_count);
-    
-    return {
-      labels,
-      datasets: [
-        {
-          label: '担当回数',
-          data,
-          backgroundColor: alpha(theme.palette.primary.main, 0.2),
-          borderColor: theme.palette.primary.main,
-          borderWidth: 2,
-          pointBackgroundColor: theme.palette.primary.main,
-          pointBorderColor: '#fff',
-          pointHoverBackgroundColor: '#fff',
-          pointHoverBorderColor: theme.palette.primary.main
-        }
-      ]
-    };
-  }, [processExperiences, theme]);
-
+  // レーダーチャートのオプションを改善
   const chartOptions = {
     scales: {
       r: {
         beginAtZero: true,
         ticks: {
-          stepSize: 1
+          stepSize: 1,
+          backdropColor: 'transparent',
+          color: theme.palette.text.secondary,
+          font: {
+            size: 10
+          }
+        },
+        angleLines: {
+          color: alpha(theme.palette.divider, 0.3)
+        },
+        grid: {
+          color: alpha(theme.palette.divider, 0.2)
+        },
+        pointLabels: {
+          color: theme.palette.text.primary,
+          font: {
+            size: 11,
+            weight: 500
+          }
         }
       }
     },
     plugins: {
       legend: {
         display: false
+      },
+      tooltip: {
+        backgroundColor: alpha(theme.palette.background.paper, 0.95),
+        titleColor: theme.palette.text.primary,
+        bodyColor: theme.palette.text.secondary,
+        borderColor: theme.palette.divider,
+        borderWidth: 1,
+        padding: 12,
+        bodyFont: {
+          size: 12
+        },
+        titleFont: {
+          size: 13,
+          weight: "bold" as const
+        }
+      }
+    },
+    maintainAspectRatio: false,
+    elements: {
+      line: {
+        borderWidth: 2,
+        tension: 0.3
+      },
+      point: {
+        radius: 4,
+        hoverRadius: 6,
+        borderWidth: 2
       }
     }
   };
   
   return (
-    <Box sx={{ py: 6 }}>
-      <Typography variant="h4" component="h2" textAlign="center" mb={4} fontWeight="bold">
-        スキル
-      </Typography>
-
-      {processChartData && (
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            mb: 6, 
-            p: 3, 
-            borderRadius: 2,
-            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
-          }}
-        >
-          <Typography 
-            variant="h5" 
-            component="h3" 
-            sx={{ 
-              mb: 3, 
-              borderBottom: `2px solid ${theme.palette.primary.main}`,
-              pb: 1,
-              display: 'inline-block'
-            }}
-          >
-            担当工程
-          </Typography>
-          
-          <Grid container spacing={4}>
-            {/* レーダーチャート（左側） */}
-            <Grid item xs={12} md={5}>
-              <Box sx={{ height: 300, width: '100%' }}>
-                <Radar data={processChartData} options={chartOptions} />
-              </Box>
-            </Grid>
-            
-            {/* 工程詳細リスト（右側） */}
-            <Grid item xs={12} md={7}>
-              <Box sx={{ maxHeight: 350, overflow: 'auto' }}>
-                <Grid container spacing={2}>
-                  {processExperiences.map((exp) => (
-                    <Grid item xs={12} key={exp.id}>
-                      <Paper
-                        variant="outlined"
-                        sx={{ 
-                          p: 2, 
-                          borderRadius: 1,
-                          borderColor: alpha(theme.palette.primary.main, 0.3),
-                          '&:hover': {
-                            boxShadow: 1,
-                            borderColor: theme.palette.primary.main
-                          }
-                        }}
-                      >
-                        <Grid container alignItems="center" spacing={2}>
-                          <Grid item xs={4} sm={3}>
-                            <Typography variant="subtitle1" fontWeight="bold">
-                              {exp.process_type_display}
-                            </Typography>
-                            <Box 
-                              sx={{ 
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                color: theme.palette.primary.main,
-                                borderRadius: 1,
-                                px: 1,
-                                py: 0.5,
-                                display: 'inline-block',
-                                mt: 0.5
-                              }}
-                            >
-                              <Typography variant="caption" fontWeight="medium">
-                                {exp.experience_count}回
-                              </Typography>
-                            </Box>
-                          </Grid>
-                          <Grid item xs={8} sm={9}>
-                            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
-                              {exp.description || '特記事項なし'}
-                            </Typography>
-                          </Grid>
-                        </Grid>
-                      </Paper>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            </Grid>
-          </Grid>
-        </Paper>
-      )}
-      
+    <Box sx={{ py: 4 }}>
       {groupedSkills.map((category) => (
-        <Box key={category.id} sx={{ mb: 6 }}>
-          <Typography 
-            variant="h5" 
-            component="h3" 
+        <Box key={category.id} sx={{ mb: 8 }}>
+          {/* カテゴリヘッダー */}
+          <Box 
             sx={{ 
-              mb: 3, 
-              borderBottom: `2px solid ${theme.palette.primary.main}`,
-              pb: 1,
-              display: 'inline-block'
+              mb: 4,
+              display: 'flex',
+              alignItems: 'center',
+              position: 'relative'
             }}
           >
-            {category.name}
-          </Typography>
+            <Box 
+              sx={{ 
+                width: 8,
+                height: 36,
+                bgcolor: theme.palette.primary.main,
+                borderRadius: 4,
+                mr: 2,
+                boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
+              }}
+            />
+            <Typography 
+              variant="h5" 
+              component="h3" 
+              sx={{ 
+                fontWeight: 600,
+                letterSpacing: '0.015em',
+                background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                position: 'relative',
+              }}
+            >
+              {category.name}
+            </Typography>
+            <Box 
+              sx={{ 
+                position: 'absolute',
+                bottom: -8,
+                left: 0,
+                width: '50px',
+                height: '2px',
+                bgcolor: alpha(theme.palette.primary.main, 0.3),
+                borderRadius: 1
+              }}
+            />
+          </Box>
           
+          {/* スキルグリッド */}
           <Box
             sx={{
               display: 'grid',
@@ -556,68 +519,135 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, processExperience
                 sm: 'repeat(3, 1fr)',
                 md: 'repeat(4, 1fr)',
                 lg: 'repeat(5, 1fr)',
+                xl: 'repeat(6, 1fr)',
               },
-              gap: 3,
+              gap: { xs: 2, sm: 3 },
             }}
           >
             {category.skills && category.skills.map((skill) => (
-              <Box key={skill.id}>
+              <Box 
+                key={skill.id} 
+                sx={{
+                  transformOrigin: 'center bottom',
+                  transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  '&:hover': {
+                    transform: 'scale(1.04)',
+                    zIndex: 2
+                  }
+                }}
+              >
                 <Box
                   sx={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    textAlign: 'center',
-                    p: { xs: 3, sm: 4 },
-                    width: '100%',
+                    p: { xs: 2, sm: 2.5 },
                     height: '100%',
-                    borderRadius: 2,
-                    transition: 'all 0.3s ease-in-out',
+                    borderRadius: 2.5,
                     position: 'relative',
-                    border: skill.is_highlighted ? `2px solid ${theme.palette.warning.main}` : 'none',
-                    boxShadow: skill.is_highlighted ? `0 4px 12px ${alpha(theme.palette.warning.main, 0.3)}` : 'none',
+                    overflow: 'hidden',
+                    backgroundColor: 'background.paper',
+                    border: '1px solid',
+                    borderColor: skill.is_highlighted 
+                      ? alpha(theme.palette.warning.main, 0.3)
+                      : alpha(theme.palette.divider, 0.08),
+                    boxShadow: skill.is_highlighted 
+                      ? `0 8px 24px ${alpha(theme.palette.warning.main, 0.15)}` 
+                      : `0 4px 16px ${alpha(theme.palette.common.black, 0.04)}`,
+                    transition: 'all 0.3s ease-in-out',
                     '&:hover': {
-                      transform: 'translateY(-5px)',
                       boxShadow: skill.is_highlighted 
-                        ? `0 6px 14px ${alpha(theme.palette.warning.main, 0.4)}` 
-                        : 1,
-                      backgroundColor: alpha(theme.palette.background.paper, 0.5)
+                        ? `0 12px 28px ${alpha(theme.palette.warning.main, 0.2)}` 
+                        : `0 8px 28px ${alpha(theme.palette.primary.main, 0.1)}`,
+                      borderColor: skill.is_highlighted 
+                        ? theme.palette.warning.main 
+                        : alpha(theme.palette.primary.main, 0.25),
+                      '& .skill-icon-wrapper': {
+                        transform: 'translateY(-3px)'
+                      }
                     },
                   }}
                 >
+                  {/* 背景の装飾 */}
                   {skill.is_highlighted && (
                     <Box 
                       sx={{ 
                         position: 'absolute',
-                        top: 8,
-                        right: 8,
+                        top: -15,
+                        right: -15,
+                        width: 100,
+                        height: 100,
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.warning.main, 0.04),
+                        zIndex: 0
+                      }}
+                    />
+                  )}
+                  
+                  {/* ハイライトバッジ */}
+                  {skill.is_highlighted && (
+                    <Box 
+                      sx={{ 
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
                         backgroundColor: theme.palette.warning.main,
                         color: theme.palette.warning.contrastText,
-                        borderRadius: '50%',
-                        width: 24,
-                        height: 24,
+                        borderRadius: '12px',
+                        px: 1,
+                        py: 0.3,
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: 1
+                        boxShadow: `0 2px 8px ${alpha(theme.palette.warning.dark, 0.25)}`,
+                        zIndex: 1
                       }}
                     >
-                      <StarIcon sx={{ fontSize: '14px' }} />
+                      <StarIcon sx={{ fontSize: '0.75rem', mr: 0.3 }} />
+                      注目
                     </Box>
                   )}
-                  <Box sx={{ width: 80, height: 80, mb: 2 }}>
-                    <Tooltip title={`スキルレベル: ${skill.level}/5`}>
+                  
+                  {/* アイコン部分 */}
+                  <Box 
+                    className="skill-icon-wrapper"
+                    sx={{ 
+                      mb: 2,
+                      width: 76,
+                      height: 76,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '50%',
+                      background: `linear-gradient(135deg, ${alpha(theme.palette.background.default, 0.6)} 0%, ${alpha(theme.palette.background.paper, 0.4)} 100%)`,
+                      boxShadow: `0 4px 16px ${alpha(theme.palette.common.black, 0.06)}`,
+                      border: '1px solid',
+                      borderColor: alpha(theme.palette.divider, 0.08),
+                      transition: 'all 0.3s ease',
+                      position: 'relative',
+                      zIndex: 1
+                    }}
+                  >
+                    <Tooltip 
+                      title={`経験: ${skill.experience_years}年`}
+                      arrow
+                      placement="top"
+                    >
                       <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+                        {/* 進捗円 */}
                         <CircularProgressbar
-                          value={skill.level * 20}
-                          strokeWidth={8}
+                          value={(Math.min(5, skill.experience_years) / 5) * 100}
+                          strokeWidth={6}
                           styles={buildStyles({
                             strokeLinecap: 'round',
                             pathColor: skill.is_highlighted ? theme.palette.warning.main : theme.palette.primary.main,
-                            trailColor: theme.palette.grey[200],
+                            trailColor: alpha(theme.palette.divider, 0.12),
                             pathTransitionDuration: 0.5,
                           })}
                         />
+                        
+                        {/* アイコン中央表示 */}
                         <Box
                           sx={{
                             position: 'absolute',
@@ -627,11 +657,11 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, processExperience
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            width: '60%',
-                            height: '60%',
+                            width: '72%',
+                            height: '72%',
                             borderRadius: '50%',
-                            bgcolor: 'background.paper',
-                            boxShadow: 'inset 0 0 5px rgba(0,0,0,0.1)'
+                            bgcolor: theme.palette.background.paper,
+                            boxShadow: `0 0 0 2px ${alpha(skill.is_highlighted ? theme.palette.warning.light : theme.palette.primary.light, 0.15)}`,
                           }}
                         >
                           <Box 
@@ -640,47 +670,87 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, processExperience
                               alignItems: 'center',
                               justifyContent: 'center',
                               color: skill.is_highlighted ? theme.palette.warning.main : theme.palette.primary.main,
+                              fontSize: 28
                             }}
                           >
-                            <IconDisplay iconId={skill.icon || ''} size={28} />
+                            <IconDisplay iconId={skill.icon || ''} size={30} />
                           </Box>
                         </Box>
                       </Box>
                     </Tooltip>
                   </Box>
+                  
+                  {/* スキル名 */}
                   <Typography 
                     variant="subtitle2" 
-                    fontWeight="bold"
                     sx={{
-                      fontSize: { xs: '0.75rem', sm: '0.85rem' },
-                      mb: 1,
-                      color: skill.is_highlighted ? theme.palette.warning.dark : 'inherit',
+                      mb: 1.5,
+                      fontSize: { xs: '0.85rem', sm: '0.9rem' },
+                      fontWeight: 600,
+                      color: skill.is_highlighted ? theme.palette.warning.dark : theme.palette.text.primary,
+                      lineHeight: 1.3,
+                      height: '2.6em',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      lineHeight: 1.2,
-                      maxWidth: '100%'
+                      textAlign: 'center',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}
+                  >
+                    {skill.name}
+                  </Typography>
+                  
+                  {/* 経験年数表示 */}
+                  <Box 
+                    sx={{ 
+                      mt: 'auto',
+                      pt: 1,
+                      px: 1.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      position: 'relative',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '24px',
+                        height: '2px',
+                        bgcolor: alpha(theme.palette.divider, 0.4),
+                        borderRadius: '1px'
+                      }
                     }}
                   >
                     <Box 
-                      component="span" 
                       sx={{ 
-                        width: '100%', 
-                        textAlign: 'center'
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 4,
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        bgcolor: alpha(skill.is_highlighted ? theme.palette.warning.main : theme.palette.primary.main, 0.1),
+                        color: skill.is_highlighted ? theme.palette.warning.dark : theme.palette.primary.dark,
                       }}
                     >
-                      {skill.name}
-                    </Box>
-                    {skill.is_highlighted && (
-                      <StarIcon 
-                        fontSize="small" 
-                        color="warning" 
-                        sx={{ ml: 0.5, fontSize: '0.8rem', flexShrink: 0 }} 
+                      <TimeIcon 
+                        sx={{ 
+                          mr: 0.5, 
+                          fontSize: '0.8rem', 
+                          opacity: 0.9 
+                        }} 
                       />
-                    )}
-                  </Typography>
-                  
-                  {renderExperienceStars(skill.experience_years)}
+                      {skill.experience_years}年経験
+                    </Box>
+                  </Box>
                 </Box>
               </Box>
             ))}

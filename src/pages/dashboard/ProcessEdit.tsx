@@ -26,13 +26,14 @@ ChartJS.register(
 
 // 担当工程の種類と表示名の定義
 const PROCESS_TYPES = [
-  // 開発プロセス（主要6工程）
-  { value: 'requirement', label: '要件定義', category: 'process' },
+  // 開発プロセス（主要7工程）
+  { value: 'requirements', label: '要件定義', category: 'process' },
   { value: 'basic_design', label: '基本設計', category: 'process' },
   { value: 'detailed_design', label: '詳細設計', category: 'process' },
   { value: 'implementation', label: '実装', category: 'process' },
   { value: 'testing', label: '試験', category: 'process' },
-  { value: 'operation', label: '運用', category: 'process' },
+  { value: 'deployment', label: 'デプロイ/リリース', category: 'process' },
+  { value: 'operation', label: '運用/保守', category: 'process' },
 ];
 
 // カテゴリの定義

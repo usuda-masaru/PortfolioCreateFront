@@ -19,12 +19,18 @@ interface EducationSectionProps {
 const EducationSection: React.FC<EducationSectionProps> = ({ education }) => {
   const theme = useTheme();
   
-  // 日付を降順にソート
-  const sortedEducation = [...education].sort((a, b) => {
+  // 表示可能な学歴のみフィルタリングし、日付を降順にソート
+  const visibleEducation = education.filter(edu => edu.is_visible !== false);
+  const sortedEducation = [...visibleEducation].sort((a, b) => {
     const dateA = a.end_date ? new Date(a.end_date) : new Date();
     const dateB = b.end_date ? new Date(b.end_date) : new Date();
     return dateB.getTime() - dateA.getTime();
   });
+  
+  // 表示する学歴がない場合は何も表示しない
+  if (sortedEducation.length === 0) {
+    return null;
+  }
   
   return (
     <Box component="section">

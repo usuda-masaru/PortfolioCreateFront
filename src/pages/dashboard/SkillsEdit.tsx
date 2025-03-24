@@ -37,6 +37,8 @@ import { skillAPI } from '../../services/api';
 import { API_BASE_URL } from '../../services/api';
 import { Skill, SkillCategory } from '../../types/interfaces';
 import api from '../../services/api'; // 既にimportされている場合は無視
+import { alpha } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 
 // インターフェース定義を拡張して、画像URLを含めるようにします
 interface IconDefinition {
@@ -485,6 +487,24 @@ const GridIconDisplay: React.FC<{ iconId: string }> = ({ iconId }) => {
       {iconId.substring(0, 2)}
     </div>
   );
+};
+
+// カテゴリにヘッダーデザインを追加するためのスタイル定義
+const CATEGORY_COLORS: Record<string, { bg: string; icon: string; color: string }> = {
+  'フロントエンド': { bg: 'rgba(33, 150, 243, 0.06)', icon: 'SiReact', color: '#1565c0' },
+  'バックエンド': { bg: 'rgba(76, 175, 80, 0.06)', icon: 'SiNodedotjs', color: '#2e7d32' },
+  'データベース': { bg: 'rgba(156, 39, 176, 0.06)', icon: 'SiPostgresql', color: '#7b1fa2' },
+  'プログラミング言語': { bg: 'rgba(255, 152, 0, 0.06)', icon: 'SiJavascript', color: '#e65100' },
+  'ツール': { bg: 'rgba(0, 150, 136, 0.06)', icon: 'SiGit', color: '#00695c' },
+  'ホスティング': { bg: 'rgba(3, 169, 244, 0.06)', icon: 'SiDocker', color: '#0277bd' },
+  'デザイン': { bg: 'rgba(244, 67, 54, 0.06)', icon: 'SiFigma', color: '#d32f2f' },
+  'OS/プラットフォーム': { bg: 'rgba(121, 85, 72, 0.06)', icon: 'SiLinux', color: '#5d4037' },
+  'モバイル': { bg: 'rgba(233, 30, 99, 0.06)', icon: 'SiAndroid', color: '#c2185b' },
+  'AWS': { bg: 'rgba(255, 193, 7, 0.06)', icon: 'FaAws', color: '#ff8f00' },
+};
+
+const getCategoryStyle = (categoryName: string): { bg: string; icon: string; color: string } => {
+  return CATEGORY_COLORS[categoryName] || { bg: 'rgba(97, 97, 97, 0.06)', icon: 'CategoryIcon', color: '#616161' };
 };
 
 const SkillsEdit: React.FC = () => {
@@ -944,6 +964,8 @@ const SkillsEdit: React.FC = () => {
     }
   };
 
+  const theme = useTheme();
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -954,18 +976,33 @@ const SkillsEdit: React.FC = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Typography variant="h4" gutterBottom>スキル管理</Typography>
+      <Typography variant="h4" gutterBottom sx={{ 
+        fontWeight: 'bold', 
+        fontSize: { xs: '1.5rem', sm: '2rem' }, 
+        position: 'relative',
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          bottom: '-8px',
+          left: 0,
+          width: '40px',
+          height: '4px',
+          backgroundColor: 'primary.main',
+          borderRadius: '2px'
+        }
+      }}>スキル管理</Typography>
       <Divider sx={{ mb: 4 }} />
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between' }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
         <Button
           variant="outlined"
           color="primary"
           startIcon={<CategoryIcon />}
           onClick={handleOpenCategoryDialog}
+          sx={{ boxShadow: '0 2px 5px rgba(0,0,0,0.08)' }}
         >
           カテゴリを追加
         </Button>
@@ -974,6 +1011,7 @@ const SkillsEdit: React.FC = () => {
           color="primary"
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
+          sx={{ boxShadow: '0 3px 5px rgba(0,0,0,0.1)' }}
         >
           新しいスキルを追加
         </Button>
@@ -984,29 +1022,93 @@ const SkillsEdit: React.FC = () => {
           カテゴリが存在しません。「カテゴリを追加」ボタンをクリックして新しいカテゴリを作成してください。
         </Alert>
       ) : (
-        categories.map(category => (
-          <Card key={category.id} sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>{category.name}</Typography>
-              <Divider sx={{ mb: 2 }} />
-              
-              {skills.filter(skill => skill.category === category.id).length === 0 ? (
-                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', my: 2 }}>
-                  このカテゴリーにはスキルがありません
+        categories.map(category => {
+          // カテゴリごとのスタイリング情報を取得
+          const categoryStyle = getCategoryStyle(category.name);
+          // このカテゴリに属するスキルをフィルタリング
+          const categorySkills = skills.filter(skill => skill.category === category.id);
+          
+          return (
+            <Card key={category.id} sx={{ 
+              mb: 4, 
+              overflow: 'visible',
+              boxShadow: '0 5px 15px rgba(0,0,0,0.05)',
+              borderRadius: 2
+            }}>
+              <Box sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                bgcolor: categoryStyle.bg,
+                borderBottom: '1px solid rgba(0,0,0,0.05)',
+                borderTopLeftRadius: 8,
+                borderTopRightRadius: 8,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2
+              }}>
+                <Box sx={{ 
+                  width: 40, 
+                  height: 40, 
+                  bgcolor: 'white', 
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 3px 5px rgba(0,0,0,0.1)'
+                }}>
+                  <GridIconDisplay iconId={categoryStyle.icon} />
+                </Box>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 'bold',
+                    color: categoryStyle.color
+                  }}
+                >
+                  {category.name}
+                  <Typography 
+                    component="span" 
+                    variant="body2" 
+                    sx={{ 
+                      ml: 1.5,
+                      color: 'text.secondary',
+                      bgcolor: 'rgba(0,0,0,0.04)',
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 5
+                    }}
+                  >
+                    {categorySkills.length}件
+                  </Typography>
                 </Typography>
-              ) : (
-                <Grid container spacing={2}>
-                  {skills
-                    .filter(skill => skill.category === category.id)
-                    .map((skill) => (
-                      <Grid item xs={12} sm={6} md={4} key={skill.id}>
+              </Box>
+              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                {categorySkills.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', my: 2, textAlign: 'center' }}>
+                    このカテゴリーにはスキルがありません
+                  </Typography>
+                ) : (
+                  <Grid container spacing={3}>
+                    {categorySkills.map((skill) => (
+                      <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={skill.id}>
                         <Card 
                           variant="outlined" 
                           sx={{ 
                             height: '100%',
                             position: 'relative',
-                            borderColor: skill.is_highlighted ? 'warning.main' : 'inherit',
-                            boxShadow: skill.is_highlighted ? '0 0 8px rgba(255,152,0,0.4)' : 'inherit',
+                            borderColor: 'transparent',
+                            borderRadius: 2,
+                            transition: 'all 0.3s ease',
+                            boxShadow: skill.is_highlighted 
+                              ? '0 5px 15px rgba(255,152,0,0.2)' 
+                              : '0 3px 10px rgba(0,0,0,0.06)',
+                            '&:hover': {
+                              transform: 'translateY(-5px)',
+                              boxShadow: skill.is_highlighted 
+                                ? '0 8px 20px rgba(255,152,0,0.3)' 
+                                : '0 8px 20px rgba(0,0,0,0.1)',
+                            },
+                            bgcolor: skill.is_highlighted ? 'rgba(255,248,225, 0.5)' : 'white',
+                            overflow: 'hidden'
                           }}
                         >
                           {skill.is_highlighted && (
@@ -1018,40 +1120,48 @@ const SkillsEdit: React.FC = () => {
                                 backgroundColor: 'warning.main',
                                 color: 'warning.contrastText',
                                 borderRadius: '50%',
-                                width: 28,
-                                height: 28,
+                                width: 32,
+                                height: 32,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                boxShadow: 1,
+                                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
                                 zIndex: 1
                               }}
                             >
                               <StarIcon fontSize="small" />
                             </Box>
                           )}
-                          <CardContent sx={{ pt: 2, pb: 1 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <CardContent sx={{ pt: 2.5, pb: 1.5 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                               {skill.icon ? (
-                                <>
-                                  <Box sx={{ mr: 1, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <IconDisplay iconId={skill.icon} size={32} />
-                                  </Box>
-                                </>
+                                <Box sx={{ 
+                                  mr: 1.5, 
+                                  width: 40, 
+                                  height: 40, 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'center',
+                                  bgcolor: 'rgba(0,0,0,0.03)',
+                                  borderRadius: '12px',
+                                  p: 0.5
+                                }}>
+                                  <IconDisplay iconId={skill.icon} size={32} />
+                                </Box>
                               ) : (
                                 <Box 
                                   sx={{ 
-                                    width: 32, 
-                                    height: 32, 
-                                    mr: 1, 
-                                    bgcolor: 'grey.200', 
-                                    borderRadius: '50%', 
+                                    width: 40, 
+                                    height: 40, 
+                                    mr: 1.5, 
+                                    bgcolor: 'grey.100', 
+                                    borderRadius: '12px', 
                                     display: 'flex', 
                                     alignItems: 'center', 
                                     justifyContent: 'center' 
                                   }}
                                 >
-                                  <Typography variant="caption" color="text.secondary">
+                                  <Typography variant="subtitle2" color="text.secondary">
                                     {skill.name.substring(0, 1).toUpperCase()}
                                   </Typography>
                                 </Box>
@@ -1060,8 +1170,9 @@ const SkillsEdit: React.FC = () => {
                                 variant="subtitle1"
                                 component="div"
                                 sx={{
-                                  fontWeight: skill.is_highlighted ? 'bold' : 'normal',
-                                  color: skill.is_highlighted ? 'warning.dark' : 'inherit'
+                                  fontWeight: 'medium',
+                                  color: skill.is_highlighted ? 'warning.dark' : 'text.primary',
+                                  lineHeight: 1.2
                                 }}
                               >
                                 {skill.name}
@@ -1077,33 +1188,94 @@ const SkillsEdit: React.FC = () => {
                               </Typography>
                             </Box>
                             
-                            <Box sx={{ mb: 1 }}>
-                              <Chip 
-                                size="small" 
-                                label={`レベル: ${skill.level}`} 
-                                color={skill.level >= 4 ? "primary" : "default"}
-                                sx={{ mr: 1, mb: 1 }} 
-                              />
-                              <Chip 
-                                size="small" 
-                                label={`${skill.experience_years}年`} 
-                                color="secondary"
-                                sx={{ mb: 1 }} 
-                              />
+                            <Box sx={{ 
+                              mb: 2,
+                              display: 'flex',
+                              alignItems: 'center',
+                              flexWrap: 'wrap',
+                              gap: 1
+                            }}>
+                              <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                bgcolor: skill.level >= 4 
+                                  ? alpha(theme.palette.primary.main, 0.08)
+                                  : alpha(theme.palette.grey[500], 0.08),
+                                color: skill.level >= 4 ? theme.palette.primary.main : theme.palette.text.secondary,
+                                borderRadius: 10,
+                                px: 1.5,
+                                py: 0.5,
+                              }}>
+                                {/* レベル表示をよりグラフィカルに */}
+                                {[...Array(5)].map((_, i) => (
+                                  <StarIcon 
+                                    key={i} 
+                                    sx={{ 
+                                      fontSize: '0.75rem', 
+                                      mx: '1px',
+                                      color: i < skill.level 
+                                        ? (skill.level >= 4 ? 'primary.main' : 'text.secondary') 
+                                        : 'action.disabled',
+                                    }} 
+                                  />
+                                ))}
+                              </Box>
+                              
+                              <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                bgcolor: alpha(theme.palette.secondary.main, 0.08),
+                                color: theme.palette.secondary.main,
+                                borderRadius: 10,
+                                px: 1.5,
+                                py: 0.5,
+                                fontWeight: 'medium',
+                                fontSize: '0.75rem',
+                              }}>
+                                {skill.experience_years}年
+                              </Box>
                             </Box>
                             
                             {skill.description && (
-                              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                              <Typography 
+                                variant="body2" 
+                                color="text.secondary" 
+                                sx={{ 
+                                  mb: 2,
+                                  fontSize: '0.85rem',
+                                  lineHeight: 1.5,
+                                  height: '2.6rem',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                }}
+                              >
                                 {skill.description}
                               </Typography>
                             )}
                             
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                            <Box sx={{ 
+                              display: 'flex', 
+                              justifyContent: 'flex-end', 
+                              mt: 'auto', 
+                              pt: 1,
+                              borderTop: '1px solid rgba(0,0,0,0.05)'
+                            }}>
                               <Tooltip title="編集">
                                 <IconButton 
                                   size="small" 
                                   onClick={() => handleOpenDialog(skill)}
-                                  sx={{ mr: 1 }}
+                                  sx={{ 
+                                    mr: 1, 
+                                    color: 'primary.main',
+                                    bgcolor: 'transparent',
+                                    '&:hover': {
+                                      bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                    }
+                                  }}
                                 >
                                   <EditIcon fontSize="small" />
                                 </IconButton>
@@ -1113,6 +1285,12 @@ const SkillsEdit: React.FC = () => {
                                   size="small" 
                                   color="error" 
                                   onClick={() => openDeleteConfirm(skill)}
+                                  sx={{ 
+                                    bgcolor: 'transparent',
+                                    '&:hover': {
+                                      bgcolor: alpha(theme.palette.error.main, 0.08),
+                                    }
+                                  }}
                                 >
                                   <DeleteIcon fontSize="small" />
                                 </IconButton>
@@ -1122,11 +1300,12 @@ const SkillsEdit: React.FC = () => {
                         </Card>
                       </Grid>
                     ))}
-                </Grid>
-              )}
-            </CardContent>
-          </Card>
-        ))
+                  </Grid>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })
       )}
 
       {/* スキル編集ダイアログ */}

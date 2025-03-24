@@ -9,6 +9,7 @@ import { profileAPI } from '../../services/api';
 
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import SkillsSection from '../../components/profile/SkillsSection';
+import ProcessExperiencesSection from '../../components/profile/ProcessExperiencesSection';
 import ProjectsSection from '../../components/profile/ProjectsSection';
 import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
@@ -157,7 +158,13 @@ const Portfolio: React.FC = () => {
         
         <Box sx={{ mt: 4 }}>
           <SectionContainer title="スキル">
-            <SkillsSection skills={profile.skills || []} processExperiences={profile.process_experiences || []} />
+            <SkillsSection skills={profile.skills || []} />
+          </SectionContainer>
+        </Box>
+
+        <Box sx={{ mt: 4 }}>
+          <SectionContainer title="担当工程">
+            <ProcessExperiencesSection processExperiences={profile.process_experiences || []} />
           </SectionContainer>
         </Box>
 
