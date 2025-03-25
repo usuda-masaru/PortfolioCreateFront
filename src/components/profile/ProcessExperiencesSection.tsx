@@ -4,10 +4,7 @@ import {
   Typography, 
   Card, 
   CardContent, 
-  Grid, 
-  Chip,
-  useTheme,
-  alpha
+  Grid
 } from '@mui/material';
 import { ProcessExperience } from '../../types/interfaces';
 
@@ -16,8 +13,6 @@ interface ProcessExperiencesSectionProps {
 }
 
 const ProcessExperiencesSection: React.FC<ProcessExperiencesSectionProps> = ({ processExperiences }) => {
-  const theme = useTheme();
-  
   const sortedExperiences = [...processExperiences].sort((a, b) => {
     return b.experience_count - a.experience_count;
   });
