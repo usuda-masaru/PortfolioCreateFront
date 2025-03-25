@@ -16,24 +16,6 @@ import {
   Legend
 } from 'chart.js';
 
-// プログラミング言語やツールのアイコンをインポート
-import { 
-  SiReact, SiAngular, SiVuedotjs, SiSvelte, SiNextdotjs,
-  SiTypescript, SiJavascript, SiHtml5, SiCss3, SiTailwindcss, 
-  SiBootstrap, SiMui, SiChakraui,
-  SiNodedotjs, SiExpress, SiNestjs, SiDjango, SiFlask,
-  SiPython, SiJavascript as SiJavaIcon, SiPhp, SiRuby, SiRubyonrails, SiGo, SiRust, SiCplusplus, SiC,
-  SiPostgresql, SiMysql, SiMongodb, SiRedis, SiFirebase, SiSqlite,
-  SiGit, SiGithub, SiGitlab, SiBitbucket,
-  SiDocker, SiKubernetes, SiAmazon, SiGooglecloud, SiVercel, SiNetlify,
-  SiJira, SiTrello, SiNotion, SiConfluence,
-  SiFigma, SiAdobexd, SiSketch,
-  SiLinux, SiUbuntu, SiDebian, SiCentos, SiRedhat, SiApple,
-  SiAndroid, SiIos, SiReact as SiReactNativeIcon, SiFlutter
-} from 'react-icons/si';
-import { FaWindows, FaMicrosoft, FaAws, FaCloud, FaServer, FaDatabase, FaAmazon } from 'react-icons/fa';
-import { IconType } from 'react-icons';
-
 // ChartJSの必要なコンポーネントを登録
 ChartJS.register(
   RadialLinearScale,
@@ -44,106 +26,10 @@ ChartJS.register(
   Legend
 );
 
-// アイコン定義の型
-interface IconDefinition {
-  id: string;
-  label: string;
-  component?: IconType;
-  category?: string;
-  imageUrl?: string;
-}
-
-// アイコン定義マップ
-const ICON_COMPONENTS: Record<string, IconType> = {
-  // フロントエンド
-  'SiReact': SiReact,
-  'SiAngular': SiAngular,
-  'SiVuedotjs': SiVuedotjs,
-  'SiSvelte': SiSvelte,
-  'SiNextdotjs': SiNextdotjs,
-  'SiHtml5': SiHtml5,
-  'SiCss3': SiCss3,
-  'SiTailwindcss': SiTailwindcss,
-  'SiBootstrap': SiBootstrap,
-  'SiMui': SiMui,
-  'SiChakraui': SiChakraui,
-  
-  // バックエンド
-  'SiNodedotjs': SiNodedotjs,
-  'SiExpress': SiExpress,
-  'SiNestjs': SiNestjs,
-  'SiDjango': SiDjango,
-  'SiFlask': SiFlask,
-  
-  // 言語
-  'SiTypescript': SiTypescript,
-  'SiJavascript': SiJavascript,
-  'SiPython': SiPython,
-  'SiJavaIcon': SiJavaIcon,
-  'SiPhp': SiPhp,
-  'SiRuby': SiRuby,
-  'SiRubyonrails': SiRubyonrails,
-  'SiGo': SiGo,
-  'SiRust': SiRust,
-  'SiCplusplus': SiCplusplus,
-  'SiC': SiC,
-  
-  // データベース
-  'SiPostgresql': SiPostgresql,
-  'SiMysql': SiMysql,
-  'SiMongodb': SiMongodb,
-  'SiRedis': SiRedis,
-  'SiFirebase': SiFirebase,
-  'SiSqlite': SiSqlite,
-  
-  // ツール
-  'SiGit': SiGit,
-  'SiGithub': SiGithub,
-  'SiGitlab': SiGitlab,
-  'SiBitbucket': SiBitbucket,
-  
-  // インフラ
-  'SiDocker': SiDocker,
-  'SiKubernetes': SiKubernetes,
-  'SiAmazon': SiAmazon,
-  'SiGooglecloud': SiGooglecloud,
-  'SiVercel': SiVercel,
-  'SiNetlify': SiNetlify,
-  
-  // AWS
-  'FaAws': FaAws,
-  'FaAmazon': FaAmazon,
-  
-  // デザイン
-  'SiFigma': SiFigma,
-  'SiAdobexd': SiAdobexd,
-  'SiSketch': SiSketch,
-  
-  // OS/プラットフォーム
-  'SiLinux': SiLinux,
-  'SiUbuntu': SiUbuntu,
-  'SiDebian': SiDebian,
-  'SiCentos': SiCentos, 
-  'SiRedhat': SiRedhat,
-  'SiApple': SiApple,
-  'FaWindows': FaWindows,
-  'FaMicrosoft': FaMicrosoft,
-  
-  // モバイル
-  'SiAndroid': SiAndroid,
-  'SiIos': SiIos,
-  'SiReactNativeIcon': SiReactNativeIcon,
-  'SiFlutter': SiFlutter,
-  
-  // その他
-  'FaCloud': FaCloud,
-  'FaServer': FaServer,
-  'FaDatabase': FaDatabase,
-};
-
 // アイコン表示用のコンポーネント
 const IconDisplay: React.FC<{ iconId: string; size?: number }> = ({ iconId, size = 24 }) => {
   const [hasError, setHasError] = React.useState(false);
+  const [iconVariant, setIconVariant] = React.useState<string>('original');
   
   if (!iconId) {
     console.log('アイコンIDが空です');
@@ -186,123 +72,60 @@ const IconDisplay: React.FC<{ iconId: string; size?: number }> = ({ iconId, size
   
   console.log(`アイコン識別子: ${effectiveIconId}`);
   
-  // 直接URL形式のアイコンの場合（画像パス）
-  if (normalizedIconId.startsWith('http://') || normalizedIconId.startsWith('https://')) {
-    console.log(`完全なURL: ${normalizedIconId}`);
-    
-    if (hasError) {
-      return (
-        <div style={{ 
-          width: size, 
-          height: size, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          backgroundColor: '#f0f0f0',
-          borderRadius: '4px',
-          fontSize: size * 0.5
-        }}>
-          {effectiveIconId.substring(0, 2)}
-        </div>
-      );
-    }
-    
+  // hasErrorの場合はフォールバック表示
+  if (hasError) {
     return (
-      <img 
-        src={normalizedIconId} 
-        alt="スキルアイコン" 
-        width={size} 
-        height={size} 
-        style={{ objectFit: 'contain' }}
-        onError={(e) => {
-          console.error(`アイコン読み込みエラー: ${normalizedIconId}`, e);
-          setHasError(true);
-        }}
-      />
+      <div style={{ 
+        width: size, 
+        height: size, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: '#f0f0f0',
+        borderRadius: '4px',
+        fontSize: size * 0.5
+      }}>
+        {effectiveIconId.substring(0, 2).toUpperCase()}
+      </div>
     );
   }
   
-  // react-iconsのコンポーネントを使用
-  const IconComponent = ICON_COMPONENTS[effectiveIconId];
-  if (IconComponent) {
-    console.log(`コンポーネント使用: ${effectiveIconId}`);
-    try {
-      // IconComponentをReact Componentとして明示的に型付け
-      const Icon = IconComponent as React.FC<{ size?: number }>;
-      return <Icon size={size} />;
-    } catch (error) {
-      console.error(`コンポーネント表示エラー: ${effectiveIconId}`, error);
-      // エラーの場合はフォールバック表示
-      return (
-        <div style={{ 
-          width: size, 
-          height: size, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          backgroundColor: '#ffeeee',
-          borderRadius: '4px',
-          fontSize: size * 0.5,
-          color: 'red'
-        }}>
-          {effectiveIconId.substring(0, 2)}
-        </div>
-      );
-    }
-  }
+  // バリエーションを含めたDeviconのアイコンURL
+  const getIconUrl = (variant: string): string => {
+    return `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${effectiveIconId}/${effectiveIconId}-${variant}.svg`;
+  };
   
-  // 外部画像パスの場合（AWSアイコンなど）
-  if (normalizedIconId.includes('/media/')) {
-    const iconUrl = `${API_BASE_URL}${normalizedIconId.startsWith('/') ? normalizedIconId : '/' + normalizedIconId}`;
-    console.log(`メディアパス: ${iconUrl}`);
-    
-    if (hasError) {
-      return (
-        <div style={{ 
-          width: size, 
-          height: size, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          backgroundColor: '#f0f0f0',
-          borderRadius: '4px',
-          fontSize: size * 0.5
-        }}>
-          {effectiveIconId.substring(0, 2)}
-        </div>
-      );
-    }
-    
-    return (
-      <img 
-        src={iconUrl} 
-        alt="スキルアイコン" 
-        width={size} 
-        height={size} 
-        style={{ objectFit: 'contain' }}
-        onError={(e) => {
-          console.error(`アイコン読み込みエラー: ${iconUrl}`, e);
-          setHasError(true);
-        }}
-      />
-    );
-  }
+  const deviconUrl = getIconUrl(iconVariant);
   
-  // それ以外の場合はフォールバック表示
-  console.log(`未定義のアイコン: ${effectiveIconId}`);
+  // エラーハンドラ - 次のバリエーションを試す
+  const handleIconError = () => {
+    console.error(`Deviconアイコン読み込みエラー: ${effectiveIconId}-${iconVariant}`);
+    
+    // 次のバリエーションを試す
+    const variants = ['original', 'plain', 'line', 'plain-wordmark', 'original-wordmark'];
+    const currentIndex = variants.indexOf(iconVariant);
+    
+    if (currentIndex < variants.length - 1) {
+      const nextVariant = variants[currentIndex + 1];
+      console.log(`次のバリエーションを試行: ${nextVariant}`);
+      setIconVariant(nextVariant);
+    } else {
+      // 全バリエーションが失敗した場合
+      console.log(`全バリエーション失敗: ${effectiveIconId}`);
+      setHasError(true);
+    }
+  };
+  
   return (
-    <div style={{ 
-      width: size, 
-      height: size, 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      backgroundColor: '#f0f0f0',
-      borderRadius: '4px',
-      fontSize: size * 0.5
-    }}>
-      {effectiveIconId.substring(0, 2)}
-    </div>
+    <img 
+      key={`${effectiveIconId}-${iconVariant}`}
+      src={deviconUrl}
+      alt={`${effectiveIconId} icon`} 
+      width={size} 
+      height={size} 
+      style={{ objectFit: 'contain' }}
+      onError={handleIconError}
+    />
   );
 };
 
@@ -673,7 +496,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills }) => {
                               fontSize: 28
                             }}
                           >
-                            <IconDisplay iconId={skill.icon || ''} size={30} />
+                            <IconDisplay iconId={skill.icon_id || ''} size={30} />
                           </Box>
                         </Box>
                       </Box>

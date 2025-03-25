@@ -19,13 +19,13 @@ import {
   Code as CodeIcon,
   School as SchoolIcon,
   Work as WorkIcon,
-  DesignServices as DesignServicesIcon,
   OpenInNew as OpenInNewIcon,
   ManageAccounts as ManageAccountsIcon,
   Build as BuildIcon,
   Assignment as AssignmentIcon,
   Visibility as VisibilityIcon,
-  GitHub as GitHubIcon
+  GitHub as GitHubIcon,
+  Article as ArticleIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserProfile } from '../../types/interfaces';
@@ -198,26 +198,11 @@ const Dashboard: React.FC = () => {
         gap: 2
       }}>
         <Box>
-          <Typography variant="h5" component="div" sx={{ 
-            fontWeight: 'medium', 
-            mb: 1,
-            color: 'text.secondary',
-            display: 'flex',
-            alignItems: 'center'
-          }}>
-            <Box component="span" sx={{ 
-              width: 5, 
-              height: 24, 
-              bgcolor: 'primary.main',
-              borderRadius: '4px',
-              mr: 1.5,
-              display: 'inline-block'
-            }}/>
-            ようこそ！
+          <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+            ポートフォリオ管理
           </Typography>
-          
           <Typography variant="body1" color="text.secondary">
-            こんにちは、<Box component="span" sx={{ fontWeight: 'bold', color: 'text.primary' }}>{profile?.display_name || user?.username}</Box>さん！ポートフォリオを充実させましょう。
+            各項目を設定して、あなたのポートフォリオを完成させましょう。
           </Typography>
         </Box>
         
@@ -225,173 +210,138 @@ const Dashboard: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            startIcon={<OpenInNewIcon />}
             component="a"
             href={`/portfolio/${profile.portfolio_slug}`}
             target="_blank"
+            startIcon={<VisibilityIcon />}
             sx={{ 
-              borderRadius: 1.5,
+              borderRadius: 2,
               textTransform: 'none',
-              fontWeight: 'medium',
-              py: 1.2,
-              px: 2.5
+              fontWeight: 'medium'
             }}
           >
             ポートフォリオを表示
           </Button>
         )}
       </Box>
-      
-      <Grid container spacing={4}>
-        {/* ステータスカード */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ 
-            p: 3, 
-            borderRadius: 2, 
-            height: '100%',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-            border: '1px solid',
-            borderColor: 'divider'
-          }} 
-          elevation={0}
-          >
-            <Typography variant="h6" gutterBottom sx={{ 
-              fontWeight: 'bold', 
-              mb: 3, 
-              color: 'primary.main',
-              display: 'flex',
-              alignItems: 'center'
-            }}>
-              <Box component="span" sx={{ 
-                width: 3, 
-                height: 20, 
-                bgcolor: 'primary.main',
-                borderRadius: '4px',
-                mr: 1.5,
-                display: 'inline-block'
-              }}/>
-              ポートフォリオステータス
-            </Typography>
-            <Divider sx={{ mb: 3 }} />
-            
-            <Box sx={{ mb: 2 }}>
-              <StatusItem 
-                icon={<PersonIcon />} 
-                label="基本情報" 
-                value={profile?.bio ? "完了" : "未設定"} 
-                completed={!!profile?.bio} 
-              />
-              
-              <StatusItem 
-                icon={<CodeIcon />} 
-                label="スキル" 
-                value={profile?.skills.length ? `${profile.skills.length}個` : "未設定"} 
-                completed={!!profile?.skills.length} 
-              />
-              
-              <StatusItem 
-                icon={<DesignServicesIcon />} 
-                label="プロジェクト" 
-                value={profile?.projects.length ? `${profile.projects.length}個` : "未設定"} 
-                completed={!!profile?.projects.length} 
-              />
-              
-              <StatusItem 
-                icon={<SchoolIcon />} 
-                label="学歴" 
-                value={profile?.education.length ? `${profile.education.length}個` : "未設定"} 
-                completed={!!profile?.education.length} 
-              />
-              
-              <StatusItem 
-                icon={<WorkIcon />} 
-                label="職歴" 
-                value={profile?.work_experiences.length ? `${profile.work_experiences.length}個` : "未設定"} 
-                completed={!!profile?.work_experiences.length} 
-              />
 
-              <StatusItem 
-                icon={<GitHubIcon />} 
-                label="GitHub連携" 
-                value={profile?.github_username ? "連携済み" : "未連携"} 
-                completed={!!profile?.github_username} 
-              />
-            </Box>
-          </Paper>
-        </Grid>
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: 3, 
+          mb: 4, 
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ mb: 3 }}>
+          設定状況
+        </Typography>
+
+        <StatusItem
+          icon={<PersonIcon />}
+          label="基本情報"
+          value={profile?.display_name ? "完了" : "未設定"}
+          completed={!!profile?.display_name}
+        />
+
+        <StatusItem
+          icon={<CodeIcon />}
+          label="スキル"
+          value={profile?.skills.length ? `${profile.skills.length}個` : "未設定"}
+          completed={!!profile?.skills.length}
+        />
+
+        <StatusItem
+          icon={<SchoolIcon />}
+          label="学歴"
+          value={profile?.education.length ? `${profile.education.length}件` : "未設定"}
+          completed={!!profile?.education.length}
+        />
+
+        <StatusItem
+          icon={<WorkIcon />}
+          label="職務経歴"
+          value={profile?.work_experiences.length ? `${profile.work_experiences.length}件` : "未設定"}
+          completed={!!profile?.work_experiences.length}
+        />
+
+        <StatusItem
+          icon={<AssignmentIcon />}
+          label="担当工程"
+          value={profile?.process_experiences?.length ? `${profile.process_experiences.length}件` : "未設定"}
+          completed={!!profile?.process_experiences?.length}
+        />
+
+        <StatusItem
+          icon={<GitHubIcon />}
+          label="GitHub連携"
+          value={profile?.github_username ? "連携済" : "未連携"}
+          completed={!!profile?.github_username}
+        />
+
+        <StatusItem
+          icon={<ArticleIcon />}
+          label="Qiita連携"
+          value={profile?.qiita_username ? "連携済" : "未連携"}
+          completed={!!profile?.qiita_username}
+        />
+      </Paper>
+
+      <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ mb: 3 }}>
+        各項目の管理
+      </Typography>
+
+      <Grid container spacing={3}>
+        <PageLink
+          title="基本情報"
+          description="名前、職業、自己紹介文などの基本的な情報を設定します。"
+          icon={<PersonIcon />}
+          to="/dashboard/profile"
+        />
         
-        {/* クイックアクション */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ 
-            p: 3, 
-            borderRadius: 2, 
-            height: '100%',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-            border: '1px solid',
-            borderColor: 'divider'
-          }} 
-          elevation={0}
-          >
-            <Typography variant="h6" gutterBottom sx={{ 
-              fontWeight: 'bold', 
-              mb: 3, 
-              color: 'primary.main',
-              display: 'flex',
-              alignItems: 'center'
-            }}>
-              <Box component="span" sx={{ 
-                width: 3, 
-                height: 20, 
-                bgcolor: 'primary.main',
-                borderRadius: '4px',
-                mr: 1.5,
-                display: 'inline-block'
-              }}/>
-              クイックアクション
-            </Typography>
-            <Divider sx={{ mb: 3 }} />
-            
-            <Grid container spacing={3}>
-              <PageLink
-                title="プロフィール管理"
-                description="名前、スキル、経歴などのプロフィール情報を編集します"
-                icon={<ManageAccountsIcon fontSize="large" />}
-                to="/dashboard/profile"
-              />
-              <PageLink
-                title="スキル管理"
-                description="技術スキルやツールの追加・編集をします"
-                icon={<BuildIcon fontSize="large" />}
-                to="/dashboard/skills"
-              />
-              <PageLink
-                title="担当工程管理"
-                description="要件定義から運用までの工程経験を登録します"
-                icon={<AssignmentIcon fontSize="large" />}
-                to="/dashboard/process"
-              />
-              <PageLink
-                title="職務経歴管理"
-                description="プロジェクト経験や案件情報を登録・編集します"
-                icon={<WorkIcon fontSize="large" />}
-                to="/dashboard/work-experience"
-              />
-              <PageLink
-                title="ポートフォリオ確認"
-                description="公開されているポートフォリオを表示します"
-                icon={<VisibilityIcon fontSize="large" />}
-                to={`/portfolio/${profile?.portfolio_slug}`}
-                external
-              />
-              <PageLink
-                icon={<SchoolIcon />}
-                title="学歴を管理"
-                description="学位や研究内容を追加"
-                to="/dashboard/education"
-              />
-            </Grid>
-          </Paper>
-        </Grid>
+        <PageLink
+          title="スキル"
+          description="あなたが持つプログラミング言語やツールのスキルを設定します。"
+          icon={<CodeIcon />}
+          to="/dashboard/skills"
+        />
+        
+        <PageLink
+          title="学歴"
+          description="学歴情報を時系列で設定します。"
+          icon={<SchoolIcon />}
+          to="/dashboard/education"
+        />
+        
+        <PageLink
+          title="職務経歴"
+          description="これまでの職務経歴を時系列で設定します。"
+          icon={<WorkIcon />}
+          to="/dashboard/work-experience"
+        />
+
+        <PageLink
+          title="担当工程"
+          description="要件定義から運用までの工程経験を登録します。"
+          icon={<AssignmentIcon />}
+          to="/dashboard/process"
+        />
+        
+        <PageLink
+          title="GitHub連携"
+          description="GitHubと連携してリポジトリ情報を表示します。"
+          icon={<GitHubIcon />}
+          to="/dashboard/github"
+        />
+        
+        <PageLink
+          title="Qiita連携"
+          description="Qiitaと連携して投稿記事を表示します。"
+          icon={<ArticleIcon />}
+          to="/dashboard/qiita"
+        />
       </Grid>
     </Box>
   );

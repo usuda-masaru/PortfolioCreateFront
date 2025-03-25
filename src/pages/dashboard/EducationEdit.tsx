@@ -381,6 +381,7 @@ const EducationEdit: React.FC = () => {
   const [currentEducation, setCurrentEducation] = useState<Partial<Education>>(emptyEducation);
   const [isNewEducation, setIsNewEducation] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const theme = useTheme();
 
   // 学歴データの取得
   const fetchEducation = async () => {
@@ -489,70 +490,113 @@ const EducationEdit: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" color="primary" gutterBottom fontWeight="bold">
-        学歴管理
-      </Typography>
-      
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {successMessage}
-        </Alert>
-      )}
-      
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
+    <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: 3, 
+          mb: 4, 
+          borderRadius: 2,
+          bgcolor: 'rgba(33, 150, 243, 0.06)',
+          color: 'primary.main',
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', md: 'center' },
+          gap: 2
+        }}
+      >
+        <Box>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              mb: 1
+            }}
+          >
+            <SchoolIcon sx={{ mr: 1.5, fontSize: '1.75rem' }} />
+            学歴管理
+          </Typography>
+          <Typography variant="body1" sx={{ opacity: 0.9 }}>
+            あなたの学歴情報を管理し、ポートフォリオに表示できます。
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
           onClick={handleOpenCreateDialog}
+          sx={{ 
+            px: 3, 
+            py: 1,
+            borderRadius: 2,
+            boxShadow: 2,
+            fontWeight: 'bold'
+          }}
         >
-          学歴を追加
+          新規作成
         </Button>
-      </Box>
-      
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: 3, 
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'divider'
-        }}
-      >
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : education.length === 0 ? (
-          <Box sx={{ p: 4, textAlign: 'center' }}>
-            <SchoolIcon sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.3, mb: 2 }} />
-            <Typography variant="h6" color="text.secondary">
-              学歴情報がまだ登録されていません
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              「学歴を追加」ボタンから登録を開始してください
-            </Typography>
-          </Box>
-        ) : (
-          <Box>
-            {education.map((edu) => (
-              <EducationItem
-                key={edu.id}
-                education={edu}
-                onEdit={handleOpenEditDialog}
-                onDelete={handleDeleteEducation}
-              />
-            ))}
-          </Box>
-        )}
       </Paper>
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 3, whiteSpace: 'pre-line', borderRadius: 2 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {successMessage && (
+        <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
+          {successMessage}
+        </Alert>
+      )}
+
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : education.length === 0 ? (
+        <Paper 
+          sx={{ 
+            p: 4, 
+            textAlign: 'center',
+            borderRadius: 2,
+            bgcolor: 'grey.50',
+            border: '1px dashed',
+            borderColor: 'grey.300'
+          }}
+        >
+          <SchoolIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
+          <Typography variant="h6" sx={{ mb: 1, fontWeight: 'medium' }}>
+            学歴情報がまだ登録されていません
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+            学歴情報を追加して、あなたの経歴をポートフォリオに表示しましょう。
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreateDialog}
+            sx={{ borderRadius: 2, px: 3 }}
+          >
+            学歴を登録する
+          </Button>
+        </Paper>
+      ) : (
+        <Box>
+          {education.map((edu) => (
+            <EducationItem
+              key={edu.id}
+              education={edu}
+              onEdit={handleOpenEditDialog}
+              onDelete={handleDeleteEducation}
+            />
+          ))}
+        </Box>
+      )}
       
       <EducationDialog
         open={dialogOpen}

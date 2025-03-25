@@ -122,6 +122,13 @@ const QiitaArticlesSection: React.FC<QiitaArticlesSectionProps> = ({ articles })
                     🔖 {article.stocks_count}
                   </Typography>
                 </Box>
+                {article.page_views_count && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', color: theme.palette.grey[600] }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                      👁️ {article.page_views_count}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             </CardContent>
             

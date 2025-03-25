@@ -66,6 +66,30 @@ const PROCESS_TEXT_COLORS = {
   '運用/保守': '#0288D1'      // ライトブルー
 };
 
+// 在籍期間を計算する関数
+const calculateDuration = (workExperience: WorkExperience): string => {
+  const startDate = new Date(workExperience.start_date);
+  const endDate = workExperience.current ? new Date() : 
+                 (workExperience.end_date ? new Date(workExperience.end_date) : new Date());
+  
+  // 月数の差を計算
+  let months = (endDate.getFullYear() - startDate.getFullYear()) * 12;
+  months += endDate.getMonth() - startDate.getMonth();
+  
+  // 年と月に変換
+  const years = Math.floor(months / 12);
+  const remainingMonths = months % 12;
+  
+  // 表示文字列を生成
+  if (years === 0) {
+    return `${remainingMonths}か月`;
+  } else if (remainingMonths === 0) {
+    return `${years}年`;
+  } else {
+    return `${years}年${remainingMonths}か月`;
+  }
+};
+
 const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences }) => {
   const theme = useTheme();
   
@@ -134,6 +158,16 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences }) =>
                   }}
                 >
                   {formatDate(exp.start_date)} - {exp.current ? '現在' : formatDate(exp.end_date)}
+                </Typography>
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: 'text.secondary',
+                    fontSize: '0.75rem',
+                    mb: 0.5
+                  }}
+                >
+                  （{calculateDuration(exp)}）
                 </Typography>
                 {exp.company && (
                   <Typography 

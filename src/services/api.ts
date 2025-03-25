@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { 
   UserProfile, PublicProfile, Skill, SkillCategory, 
-  Project, Education, WorkExperience, QiitaArticle
+  Education, WorkExperience, QiitaArticle
 } from '../types/interfaces';
 
 // バックエンドAPIのエンドポイント
@@ -56,7 +56,13 @@ api.interceptors.response.use(
 // 認証関連のデータ型
 interface AuthResponse {
   token: string;
-  user?: any;
+  user?: {
+    id: number;
+    username: string;
+    email: string;
+    first_name?: string;
+    last_name?: string;
+  };
 }
 
 // 認証関連の API 呼び出し
@@ -65,15 +71,59 @@ export const authAPI = {
     const response = await api.post<AuthResponse>('/api/api-token-auth/', { username, password });
     return response.data;
   },
-  register: async (userData: any) => {
+  register: async (userData: { username: string; email: string; password: string }): Promise<AuthResponse> => {
     try {
-      console.log('Registering user with data:', userData);
-      const response = await api.post('/api/register/', userData);
-      console.log('Registration successful, response:', response.data);
+      console.log('Registering user with data:', {
+        ...userData,
+        password: '[FILTERED]' // パスワードをログに出力しない
+      });
+      
+      // バリデーション
+      if (!userData.username?.trim()) {
+        throw new Error('ユーザー名は必須です');
+      }
+      if (!userData.email?.trim()) {
+        throw new Error('メールアドレスは必須です');
+      }
+      if (!userData.password?.trim()) {
+        throw new Error('パスワードは必須です');
+      }
+      
+      const response = await api.post<AuthResponse>('/api/register/', userData);
+      console.log('Registration successful, response:', {
+        id: response.data.user?.id,
+        username: response.data.user?.username,
+        email: response.data.user?.email,
+        token: '[FILTERED]' // トークンをログに出力しない
+      });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
-      throw error;
+      
+      // エラーレスポンスの詳細を確認
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        console.error('Registration error details:', errorData);
+        
+        if (errorData.error) {
+          // エラーオブジェクトの場合、各フィールドのエラーメッセージを結合
+          if (typeof errorData.error === 'object') {
+            const errorMessages = Object.entries(errorData.error)
+              .map(([field, message]) => `${field}: ${message}`)
+              .join('\n');
+            throw new Error(errorMessages);
+          } else {
+            throw new Error(errorData.error);
+          }
+        } else if (errorData.detail) {
+          throw new Error(errorData.detail);
+        } else if (errorData.message) {
+          throw new Error(errorData.message);
+        }
+      }
+      
+      // その他のエラー
+      throw new Error('会員登録に失敗しました。入力内容を確認してください。');
     }
   },
   logout: async () => {
@@ -108,10 +158,13 @@ export const authAPI = {
 export const profileAPI = {
   getPublicProfile: async (slug: string): Promise<PublicProfile> => {
     try {
-      const response = await api.get<PublicProfile>(`/api/profiles/public/${slug}/`);
+      console.log('Calling getPublicProfile with slug:', slug);
+      const response = await api.get<PublicProfile>(`/api/profiles/${slug}/`);
+      console.log('getPublicProfile response:', response.data);
       
       // 開発モードでQiita記事サンプルデータを追加
       if (process.env.NODE_ENV === 'development') {
+        console.log('Adding sample Qiita articles in development mode');
         // ローカル開発中はレスポンスにQiita記事サンプルを追加
         response.data.qiita_articles = [
           {
@@ -122,6 +175,7 @@ export const profileAPI = {
             updated_at: '2023-10-16T10:30:00+09:00',
             likes_count: 125,
             stocks_count: 78,
+            page_views_count: 5680,
             tags: ['React', 'JavaScript', 'パフォーマンス', 'フロントエンド'],
             is_featured: true
           },
@@ -133,6 +187,7 @@ export const profileAPI = {
             updated_at: '2023-09-22T11:15:00+09:00',
             likes_count: 210,
             stocks_count: 145,
+            page_views_count: 8350,
             tags: ['TypeScript', '型システム', 'JavaScript']
           },
           {
@@ -184,14 +239,22 @@ export const profileAPI = {
       updated_at, 
       profile_image, // 画像フィールドを明示的に除外
       skills, // ネストされたリレーション系のフィールドを除外
-      projects,
       education, 
       work_experiences,
       ...updatableData 
     } = profileData;
     
     // コンソールに送信データを表示（デバッグ用）
-    console.log('Sending profile update data:', updatableData);
+    console.log('Profile update request details:', {
+      originalData: profileData,
+      processedData: updatableData,
+      endpoint: `/api/profiles/${id}/`,
+      method: 'PATCH',
+      requiredFields: {
+        title: updatableData.title,
+        display_name: updatableData.display_name
+      }
+    });
     
     if (!id) {
       throw new Error('Profile ID is missing, cannot update profile');
@@ -200,9 +263,20 @@ export const profileAPI = {
     try {
       // PUTの代わりにPATCHを使用（部分更新）
       const response = await api.patch<UserProfile>(`/api/profiles/${id}/`, updatableData);
+      console.log('Profile update response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error updating profile:', error);
+      if (error instanceof Error) {
+        if ('response' in error && error.response) {
+          const axiosError = error as any;
+          console.error('API error response:', {
+            status: axiosError.response?.status,
+            data: axiosError.response?.data,
+            headers: axiosError.response?.headers
+          });
+        }
+      }
       throw error; // エラーを呼び出し元に伝播させる
     }
   },
@@ -272,11 +346,57 @@ export const skillAPI = {
   // スキルを作成する
   createSkill: async (skillData: Partial<Skill>): Promise<Skill> => {
     try {
-      console.log('新しいスキルを作成します:', skillData);
-      const response = await api.post<Skill>('/api/skills/', skillData);
+      console.log('スキル作成リクエスト:', skillData);
+      
+      // アイコンIDの正規化
+      const formattedData = { ...skillData };
+      if (formattedData.icon) {
+        let iconId = formattedData.icon;
+        if (typeof iconId === 'string') {
+          // URLからアイコンIDを抽出
+          if (iconId.startsWith('http')) {
+            iconId = decodeURIComponent(iconId.split('/').pop() || '');
+          }
+          // Siプレフィックスを削除して小文字に変換
+          iconId = iconId.replace(/^Si/, '').toLowerCase();
+        }
+        formattedData.icon_id = iconId;
+        delete formattedData.icon;
+      }
+
+      console.log('正規化されたアイコンID:', formattedData.icon_id);
+      console.log('スキル作成リクエストの詳細:', {
+        url: `${API_BASE_URL}/api/skills/`,
+        data: formattedData
+      });
+
+      const response = await api.post<Skill>('/api/skills/', formattedData, {
+        headers: {
+          'Authorization': `Token ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('スキル作成成功:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error creating skill:', error);
+      console.error('スキル作成エラー:', error);
+      if (error instanceof Error) {
+        if ('response' in error && error.response) {
+          const axiosError = error as any;
+          const errorMessage = axiosError.response?.data?.detail || 
+                             axiosError.response?.data?.message || 
+                             axiosError.response?.data?.error || 
+                             'スキルの作成に失敗しました。';
+          
+          if (axiosError.response?.status === 400 && 
+              axiosError.response?.data?.detail?.includes('UNIQUE constraint failed')) {
+            throw new Error('このスキル名は既に登録されています。別の名前を入力してください。');
+          }
+          
+          throw new Error(errorMessage);
+        }
+      }
       throw error;
     }
   },
@@ -288,11 +408,37 @@ export const skillAPI = {
     }
     
     try {
+      // スキルデータを整形
+      const skillDataFormatted = { ...skill };
+      
+      // アイコンIDを正しく処理
+      if (skillDataFormatted.icon !== undefined) {
+        if (typeof skillDataFormatted.icon === 'string') {
+          // URLやSiプレフィックスを削除してアイコンIDを抽出
+          let iconId = skillDataFormatted.icon;
+          
+          // URLの場合は最後のパスセグメントを取得
+          if (iconId.startsWith('http')) {
+            // URLをデコードしてから最後のパスセグメントを取得
+            iconId = decodeURIComponent(iconId).split('/').pop() || '';
+          }
+          
+          // Siプレフィックスを削除
+          if (iconId.startsWith('Si')) {
+            iconId = iconId.substring(2).toLowerCase();
+          }
+          
+          console.log('正規化したアイコンID:', iconId);
+          skillDataFormatted.icon_id = iconId;
+        }
+        delete skillDataFormatted.icon;
+      }
+      
       // リクエストの詳細をログ出力
-      console.log(`スキルを更新します ID: ${skill.id}`, skill);
+      console.log(`スキルを更新します ID: ${skillDataFormatted.id}`, skillDataFormatted);
       
       // パスを修正 - 末尾のスラッシュを確認
-      const response = await api.patch<Skill>(`/api/skills/${skill.id}/`, skill);
+      const response = await api.patch<Skill>(`/api/skills/${skillDataFormatted.id}/`, skillDataFormatted);
       
       console.log('スキル更新成功:', response.data);
       return response.data;
@@ -355,41 +501,26 @@ export const skillAPI = {
       console.error('Error creating category:', error);
       throw error;
     }
-  }
-};
+  },
 
-// プロジェクト関連の API 呼び出し
-export const projectAPI = {
-  getProjects: async () => {
-    const response = await api.get<Project[]>('/api/projects/');
-    return response.data;
-  },
-  createProject: async (projectData: Partial<Project>) => {
-    const response = await api.post<Project>('/api/projects/', projectData);
-    return response.data;
-  },
-  updateProject: async (projectData: Partial<Project>) => {
-    const response = await api.patch<Project>(`/api/projects/${projectData.id}/`, projectData);
-    return response.data;
-  },
-  deleteProject: async (id: number) => {
-    await api.delete(`/api/projects/${id}/`);
-  },
-  uploadProjectThumbnail: async (id: number, thumbnailFile: File) => {
-    const formData = new FormData();
-    formData.append('thumbnail', thumbnailFile);
-    
-    const response = await api.patch<Project>(
-      `/api/projects/${id}/`, 
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+  // カテゴリを削除する
+  deleteCategory: async (categoryId: number): Promise<void> => {
+    try {
+      await api.delete(`/api/skill-categories/${categoryId}/`);
+    } catch (error) {
+      console.error('カテゴリの削除エラー:', error);
+      if (error instanceof Error) {
+        if ('response' in error && error.response) {
+          const axiosError = error as any;
+          const errorMessage = axiosError.response?.data?.error || 
+                             axiosError.response?.data?.detail || 
+                             'カテゴリの削除に失敗しました。';
+          throw new Error(errorMessage);
+        }
       }
-    );
-    return response.data;
-  },
+      throw error;
+    }
+  }
 };
 
 // 学歴関連の API 呼び出し

@@ -1,4 +1,4 @@
-import { User, Skill, Project, Education, WorkExperience } from './interfaces';
+import { User, Skill, Education, WorkExperience } from './interfaces';
 
 export interface UserProfile {
   id: number;
@@ -20,7 +20,6 @@ export interface UserProfile {
   updated_at: string;
   user_details?: User;
   skills?: Skill[];
-  projects?: Project[];
   education?: Education[];
   work_experiences?: WorkExperience[];
 } 

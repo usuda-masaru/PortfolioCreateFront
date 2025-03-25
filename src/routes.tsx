@@ -8,12 +8,17 @@ import ProcessEdit from './pages/dashboard/ProcessEdit';
 import EducationEdit from './pages/dashboard/EducationEdit';
 import QiitaEdit from './pages/dashboard/QiitaEdit';
 import Dashboard from './pages/dashboard/Dashboard';
+import Portfolio from './pages/public/Portfolio';
 // import SkillEdit from './pages/dashboard/SkillEdit';
 import Login from './pages/auth/Login';
 // import Profile from './pages/profile/Profile';
 
 // ダッシュボード内のルート
 const routes: RouteObject[] = [
+  {
+    path: '/portfolio/:portfolio_slug',
+    element: <Portfolio />,
+  },
   {
     path: '/dashboard',
     element: <Dashboard />,

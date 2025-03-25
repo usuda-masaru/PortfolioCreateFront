@@ -157,13 +157,13 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
         />
         
         {/* 動くグラデーションオーバーレイ */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
             opacity: 0.3,
             background: `linear-gradient(45deg, 
               transparent 45%, 
@@ -202,7 +202,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
         />
         
         <Box
-          sx={{
+          sx={{ 
             position: 'absolute',
             width: { xs: 80, sm: 150 },
             height: { xs: 80, sm: 150 },
@@ -287,10 +287,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                 />
                 
                 {/* メインアバター */}
-                <Avatar
-                  src={profile.profile_image}
-                  alt={profile.display_name}
-                  sx={{ 
+            <Avatar
+              src={profile.profile_image}
+              alt={profile.display_name}
+              sx={{ 
                     position: 'relative',
                     width: { xs: 150, sm: 180, md: 200 }, 
                     height: { xs: 150, sm: 180, md: 200 },
@@ -373,8 +373,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                   </Tooltip>
                 ))}
               </Box>
-            </Grid>
-            
+          </Grid>
+          
             {/* 右側：プロフィール情報 */}
             <Grid item xs={12} sm={8} md={9} lg={9.5} sx={{ px: { xs: 0, md: 2 } }}>
               <Box 
@@ -476,9 +476,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                           }
                         }}
                       >
-                        {profile.display_name}
-                      </Typography>
-                      
+                {profile.display_name}
+              </Typography>
+              
                       {profile.github_username && (
                         <Tooltip title="GitHub連携済み" arrow placement="top">
                           <Box
@@ -535,12 +535,12 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                         }
                       }}
                     >
-                      {profile.title}
-                    </Typography>
+                {profile.title}
+              </Typography>
                   </Box>
-                  
+              
                   {/* 所在地 */}
-                  {profile.location && (
+              {profile.location && (
                     <Box sx={{ 
                       display: 'flex', 
                       alignItems: 'center', 
@@ -577,9 +577,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                       >
                         {profile.location}
                       </Typography>
-                    </Box>
-                  )}
-                  
+                </Box>
+              )}
+
                   <Divider 
                     sx={{ 
                       my: 2.5, 
@@ -595,9 +595,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                   />
                   
                   {/* プロフィール文 */}
-                  <Typography 
-                    variant="body1" 
-                    sx={{ 
+              <Typography 
+                variant="body1" 
+                sx={{ 
                       mb: 3.5,
                       lineHeight: 1.8,
                       color: alpha(theme.palette.text.primary, 0.85),
@@ -610,22 +610,17 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                       maxWidth: '800px',
                       fontSize: { xs: '0.95rem', sm: '1rem' },
                       textShadow: `0 1px 1px ${alpha(theme.palette.background.paper, 0.5)}`,
-                      '&::first-letter': {
-                        fontSize: '1.2em',
-                        fontWeight: 600,
-                        color: theme.palette.primary.main
-                      },
                       '@keyframes fadeIn': {
                         '0%': { opacity: 0 },
                         '100%': { opacity: 1 }
                       }
-                    }}
-                  >
-                    {profile.bio}
-                  </Typography>
-                  
+                }}
+              >
+                {profile.bio}
+              </Typography>
+              
                   {/* 専門分野 */}
-                  {profile.specialty && (
+              {profile.specialty && (
                     <Box sx={{ 
                       animation: 'fadeIn 1s ease forwards',
                       animationDelay: '0.6s',
@@ -664,23 +659,23 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                             letterSpacing: '0.03em'
                           }}
                         >
-                          専門分野
-                        </Typography>
+                    専門分野
+                  </Typography>
                       </Box>
                       
-                      <Box 
-                        sx={{ 
-                          display: 'flex', 
-                          flexWrap: 'wrap', 
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
                           gap: 1.2,
-                          justifyContent: isMobile ? 'center' : 'flex-start'
-                        }}
-                      >
-                        {profile.specialty.split('、').map((item, index) => (
-                          <Chip
-                            key={index}
-                            label={item}
-                            sx={{
+                      justifyContent: isMobile ? 'center' : 'flex-start'
+                    }}
+                  >
+                    {profile.specialty.split('、').map((item, index) => (
+                      <Chip
+                        key={index}
+                        label={item}
+                        sx={{
                               bgcolor: alpha(theme.palette.primary.main, 0.08),
                               color: theme.palette.primary.dark,
                               fontSize: '0.88rem',
@@ -710,7 +705,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                                 opacity: 0,
                                 transition: 'opacity 0.3s ease'
                               },
-                              '&:hover': {
+                          '&:hover': {
                                 bgcolor: alpha(theme.palette.primary.main, 0.13),
                                 transform: 'translateY(-4px) scale(1.03)',
                                 boxShadow: `0 6px 12px ${alpha(theme.palette.primary.main, 0.15)}`,
@@ -728,12 +723,12 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                                   transform: 'translateY(0)'
                                 }
                               }
-                            }}
-                          />
-                        ))}
-                      </Box>
-                    </Box>
-                  )}
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
                 </Box>
               </Box>
             </Grid>

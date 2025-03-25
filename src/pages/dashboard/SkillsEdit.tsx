@@ -6,486 +6,240 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   FormHelperText, Chip, Tooltip, Avatar, SelectChangeEvent,
   InputAdornment, Tab, Tabs, Modal, TextField as MuiTextField,
-  Checkbox, FormControlLabel
+  Checkbox, FormControlLabel, List, ListItem, ListItemText,
+  ListItemButton
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Delete as DeleteIcon, Edit as EditIcon, Error as ErrorIcon } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CategoryIcon from '@mui/icons-material/Category';
 import SearchIcon from '@mui/icons-material/Search';
 import EmojiSymbolsIcon from '@mui/icons-material/EmojiSymbols';
 import StarIcon from '@mui/icons-material/Star';
-// プログラミング言語やツールのアイコンをインポート
-import { 
-  SiReact, SiAngular, SiVuedotjs, SiSvelte, SiNextdotjs,
-  SiTypescript, SiJavascript, SiHtml5, SiCss3, SiTailwindcss, 
-  SiBootstrap, SiMui, SiChakraui,
-  SiNodedotjs, SiExpress, SiNestjs, SiDjango, SiFlask,
-  SiPython, SiJavascript as SiJavaIcon, SiPhp, SiRuby, SiRubyonrails, SiGo, SiRust, SiCplusplus, SiC,
-  SiPostgresql, SiMysql, SiMongodb, SiRedis, SiFirebase, SiSqlite,
-  SiGit, SiGithub, SiGitlab, SiBitbucket,
-  SiDocker, SiKubernetes, SiAmazon, SiGooglecloud, SiVercel, SiNetlify,
-  SiJira, SiTrello, SiNotion, SiConfluence,
-  SiFigma, SiAdobexd, SiSketch,
-  SiLinux, SiUbuntu, SiDebian, SiCentos, SiRedhat, SiApple,
-  SiAndroid, SiIos, SiReact as SiReactNativeIcon, SiFlutter
-} from 'react-icons/si';
-import { FaWindows, FaMicrosoft, FaAws, FaCloud, FaServer, FaDatabase, FaAmazon } from 'react-icons/fa';
-import { IconType } from 'react-icons';
+import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+import { AccessTime as TimeIcon, Code as CodeIcon } from '@mui/icons-material';
 import { skillAPI } from '../../services/api';
 import { API_BASE_URL } from '../../services/api';
 import { Skill, SkillCategory } from '../../types/interfaces';
 import api from '../../services/api'; // 既にimportされている場合は無視
 import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
+import {
+  Chart as ChartJS,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip as ChartTooltip,
+  Legend
+} from 'chart.js';
 
-// インターフェース定義を拡張して、画像URLを含めるようにします
-interface IconDefinition {
-  id: string;
-  label: string;
-  component?: IconType;
-  category: string;
-  imageUrl?: string; // 画像URLを追加
-}
+// ChartJSの必要なコンポーネントを登録
+ChartJS.register(
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  ChartTooltip,
+  Legend
+);
 
-// アイコンカテゴリ
+// アイコンカテゴリの定義
 const ICON_CATEGORIES = [
   'フロントエンド', 'バックエンド', 'プログラミング言語', 'データベース', 
   'ツール', 'ホスティング', 'デザイン', 'OS/プラットフォーム', 'モバイル', 'AWS'
 ];
 
+// アイコン定義の型
+interface IconDefinition {
+  id: string;
+  label: string;
+  category: string;
+}
+
 // 利用可能なアイコンの定義
 const AVAILABLE_ICONS: IconDefinition[] = [
   // フロントエンド
-  { id: 'SiReact', label: 'React', component: SiReact, category: 'フロントエンド' },
-  { id: 'SiAngular', label: 'Angular', component: SiAngular, category: 'フロントエンド' },
-  { id: 'SiVuedotjs', label: 'Vue.js', component: SiVuedotjs, category: 'フロントエンド' },
-  { id: 'SiSvelte', label: 'Svelte', component: SiSvelte, category: 'フロントエンド' },
-  { id: 'SiNextdotjs', label: 'Next.js', component: SiNextdotjs, category: 'フロントエンド' },
-  { id: 'SiHtml5', label: 'HTML5', component: SiHtml5, category: 'フロントエンド' },
-  { id: 'SiCss3', label: 'CSS3', component: SiCss3, category: 'フロントエンド' },
-  { id: 'SiTailwindcss', label: 'Tailwind CSS', component: SiTailwindcss, category: 'フロントエンド' },
-  { id: 'SiBootstrap', label: 'Bootstrap', component: SiBootstrap, category: 'フロントエンド' },
-  { id: 'SiMui', label: 'Material UI', component: SiMui, category: 'フロントエンド' },
-  { id: 'SiChakraui', label: 'Chakra UI', component: SiChakraui, category: 'フロントエンド' },
+  { id: 'react', label: 'React', category: 'フロントエンド' },
+  { id: 'angularjs', label: 'Angular', category: 'フロントエンド' },
+  { id: 'vuejs', label: 'Vue.js', category: 'フロントエンド' },
+  { id: 'svelte', label: 'Svelte', category: 'フロントエンド' },
+  { id: 'nextjs', label: 'Next.js', category: 'フロントエンド' },
+  { id: 'html5', label: 'HTML5', category: 'フロントエンド' },
+  { id: 'css3', label: 'CSS3', category: 'フロントエンド' },
+  { id: 'tailwindcss', label: 'Tailwind CSS', category: 'フロントエンド' },
+  { id: 'bootstrap', label: 'Bootstrap', category: 'フロントエンド' },
+  { id: 'materialui', label: 'Material UI', category: 'フロントエンド' },
+  { id: 'sass', label: 'Sass', category: 'フロントエンド' },
   
   // バックエンド
-  { id: 'SiNodedotjs', label: 'Node.js', component: SiNodedotjs, category: 'バックエンド' },
-  { id: 'SiExpress', label: 'Express', component: SiExpress, category: 'バックエンド' },
-  { id: 'SiNestjs', label: 'NestJS', component: SiNestjs, category: 'バックエンド' },
-  { id: 'SiDjango', label: 'Django', component: SiDjango, category: 'バックエンド' },
-  { id: 'SiFlask', label: 'Flask', component: SiFlask, category: 'バックエンド' },
-  { id: 'SiRubyonrails', label: 'Ruby on Rails', component: SiRubyonrails, category: 'バックエンド' },
+  { id: 'nodejs', label: 'Node.js', category: 'バックエンド' },
+  { id: 'express', label: 'Express', category: 'バックエンド' },
+  { id: 'nestjs', label: 'NestJS', category: 'バックエンド' },
+  { id: 'django', label: 'Django', category: 'バックエンド' },
+  { id: 'flask', label: 'Flask', category: 'バックエンド' },
+  { id: 'rails', label: 'Ruby on Rails', category: 'バックエンド' },
+  { id: 'spring', label: 'Spring', category: 'バックエンド' },
+  { id: 'laravel', label: 'Laravel', category: 'バックエンド' },
   
   // プログラミング言語
-  { id: 'SiJavascript', label: 'JavaScript', component: SiJavascript, category: 'プログラミング言語' },
-  { id: 'SiTypescript', label: 'TypeScript', component: SiTypescript, category: 'プログラミング言語' },
-  { id: 'SiPython', label: 'Python', component: SiPython, category: 'プログラミング言語' },
-  { id: 'SiJavaIcon', label: 'Java', component: SiJavaIcon, category: 'プログラミング言語' },
-  { id: 'SiPhp', label: 'PHP', component: SiPhp, category: 'プログラミング言語' },
-  { id: 'SiRuby', label: 'Ruby', component: SiRuby, category: 'プログラミング言語' },
-  { id: 'SiGo', label: 'Go', component: SiGo, category: 'プログラミング言語' },
-  { id: 'SiRust', label: 'Rust', component: SiRust, category: 'プログラミング言語' },
-  { id: 'SiCplusplus', label: 'C++', component: SiCplusplus, category: 'プログラミング言語' },
-  { id: 'SiC', label: 'C', component: SiC, category: 'プログラミング言語' },
+  { id: 'javascript', label: 'JavaScript', category: 'プログラミング言語' },
+  { id: 'typescript', label: 'TypeScript', category: 'プログラミング言語' },
+  { id: 'python', label: 'Python', category: 'プログラミング言語' },
+  { id: 'java', label: 'Java', category: 'プログラミング言語' },
+  { id: 'php', label: 'PHP', category: 'プログラミング言語' },
+  { id: 'ruby', label: 'Ruby', category: 'プログラミング言語' },
+  { id: 'go', label: 'Go', category: 'プログラミング言語' },
+  { id: 'rust', label: 'Rust', category: 'プログラミング言語' },
+  { id: 'cplusplus', label: 'C++', category: 'プログラミング言語' },
+  { id: 'c', label: 'C', category: 'プログラミング言語' },
+  { id: 'csharp', label: 'C#', category: 'プログラミング言語' },
+  { id: 'kotlin', label: 'Kotlin', category: 'プログラミング言語' },
+  { id: 'swift', label: 'Swift', category: 'プログラミング言語' },
   
   // データベース
-  { id: 'SiPostgresql', label: 'PostgreSQL', component: SiPostgresql, category: 'データベース' },
-  { id: 'SiMysql', label: 'MySQL', component: SiMysql, category: 'データベース' },
-  { id: 'SiMongodb', label: 'MongoDB', component: SiMongodb, category: 'データベース' },
-  { id: 'SiRedis', label: 'Redis', component: SiRedis, category: 'データベース' },
-  { id: 'SiFirebase', label: 'Firebase', component: SiFirebase, category: 'データベース' },
-  { id: 'SiSqlite', label: 'SQLite', component: SiSqlite, category: 'データベース' },
+  { id: 'postgresql', label: 'PostgreSQL', category: 'データベース' },
+  { id: 'mysql', label: 'MySQL', category: 'データベース' },
+  { id: 'mongodb', label: 'MongoDB', category: 'データベース' },
+  { id: 'redis', label: 'Redis', category: 'データベース' },
+  { id: 'firebase', label: 'Firebase', category: 'データベース' },
+  { id: 'sqlite', label: 'SQLite', category: 'データベース' },
   
   // ツール
-  { id: 'SiGit', label: 'Git', component: SiGit, category: 'ツール' },
-  { id: 'SiGithub', label: 'GitHub', component: SiGithub, category: 'ツール' },
-  { id: 'SiGitlab', label: 'GitLab', component: SiGitlab, category: 'ツール' },
-  { id: 'SiBitbucket', label: 'Bitbucket', component: SiBitbucket, category: 'ツール' },
-  { id: 'SiJira', label: 'Jira', component: SiJira, category: 'ツール' },
-  { id: 'SiTrello', label: 'Trello', component: SiTrello, category: 'ツール' },
-  { id: 'SiNotion', label: 'Notion', component: SiNotion, category: 'ツール' },
-  { id: 'SiConfluence', label: 'Confluence', component: SiConfluence, category: 'ツール' },
+  { id: 'git', label: 'Git', category: 'ツール' },
+  { id: 'github', label: 'GitHub', category: 'ツール' },
+  { id: 'gitlab', label: 'GitLab', category: 'ツール' },
+  { id: 'bitbucket', label: 'Bitbucket', category: 'ツール' },
+  { id: 'docker', label: 'Docker', category: 'ツール' },
+  { id: 'kubernetes', label: 'Kubernetes', category: 'ツール' },
+  { id: 'npm', label: 'npm', category: 'ツール' },
+  { id: 'yarn', label: 'Yarn', category: 'ツール' },
+  { id: 'webpack', label: 'Webpack', category: 'ツール' },
   
-  // ホスティング
-  { id: 'SiDocker', label: 'Docker', component: SiDocker, category: 'ホスティング' },
-  { id: 'SiKubernetes', label: 'Kubernetes', component: SiKubernetes, category: 'ホスティング' },
-  { id: 'SiGooglecloud', label: 'Google Cloud', component: SiGooglecloud, category: 'ホスティング' },
-  { id: 'FaMicrosoft', label: 'Microsoft', component: FaMicrosoft, category: 'ホスティング' },
-  { id: 'FaServer', label: 'サーバー', component: FaServer, category: 'ホスティング' },
-  { id: 'FaDatabase', label: 'データベース', component: FaDatabase, category: 'ホスティング' },
-  { id: 'FaCloud', label: 'クラウド', component: FaCloud, category: 'ホスティング' },
-  { id: 'SiVercel', label: 'Vercel', component: SiVercel, category: 'ホスティング' },
-  { id: 'SiNetlify', label: 'Netlify', component: SiNetlify, category: 'ホスティング' },
-  
-  // AWS
-  { id: 'SiAmazon', label: 'AWS', component: SiAmazon, category: 'AWS' },
-  { id: 'FaAws', label: 'AWS', component: FaAws, category: 'AWS' },
-  { id: 'FaAmazon', label: 'Amazon', component: FaAmazon, category: 'AWS' },
-  { id: 'aws_s3', label: 'Amazon S3', imageUrl: '/aws-icons/s3.svg', category: 'AWS' },
-  { id: 'aws_ec2', label: 'Amazon EC2', imageUrl: '/aws-icons/ec2.svg', category: 'AWS' },
-  { id: 'aws_rds', label: 'Amazon RDS', imageUrl: '/aws-icons/rds.svg', category: 'AWS' },
-  { id: 'aws_lambda', label: 'AWS Lambda', imageUrl: '/aws-icons/lambda.svg', category: 'AWS' },
-  { id: 'aws_dynamodb', label: 'Amazon DynamoDB', imageUrl: '/aws-icons/dynamodb.svg', category: 'AWS' },
-  { id: 'aws_cloudformation', label: 'AWS CloudFormation', imageUrl: '/aws-icons/cloudformation.svg', category: 'AWS' },
-  { id: 'aws_ecs', label: 'Amazon ECS', imageUrl: '/aws-icons/ecs.svg', category: 'AWS' },
-  { id: 'aws_eks', label: 'Amazon EKS', imageUrl: '/aws-icons/eks.svg', category: 'AWS' },
-  { id: 'aws_cloudwatch', label: 'Amazon CloudWatch', imageUrl: '/aws-icons/cloudwatch.svg', category: 'AWS' },
-  { id: 'aws_route53', label: 'Amazon Route 53', imageUrl: '/aws-icons/route53.svg', category: 'AWS' },
-  { id: 'aws_vpc', label: 'Amazon VPC', imageUrl: '/aws-icons/vpc.svg', category: 'AWS' },
-  { id: 'aws_iam', label: 'AWS IAM', imageUrl: '/aws-icons/iam.svg', category: 'AWS' },
+  // クラウド/ホスティング
+  { id: 'amazonwebservices', label: 'AWS', category: 'ホスティング' },
+  { id: 'googlecloud', label: 'Google Cloud', category: 'ホスティング' },
+  { id: 'azure', label: 'Azure', category: 'ホスティング' },
+  { id: 'heroku', label: 'Heroku', category: 'ホスティング' },
+  { id: 'vercel', label: 'Vercel', category: 'ホスティング' },
+  { id: 'netlify', label: 'Netlify', category: 'ホスティング' },
   
   // デザイン
-  { id: 'SiFigma', label: 'Figma', component: SiFigma, category: 'デザイン' },
-  { id: 'SiAdobexd', label: 'Adobe XD', component: SiAdobexd, category: 'デザイン' },
-  { id: 'SiSketch', label: 'Sketch', component: SiSketch, category: 'デザイン' },
+  { id: 'figma', label: 'Figma', category: 'デザイン' },
+  { id: 'adobexd', label: 'Adobe XD', category: 'デザイン' },
+  { id: 'photoshop', label: 'Photoshop', category: 'デザイン' },
+  { id: 'illustrator', label: 'Illustrator', category: 'デザイン' },
   
   // OS/プラットフォーム
-  { id: 'SiLinux', label: 'Linux', component: SiLinux, category: 'OS/プラットフォーム' },
-  { id: 'SiUbuntu', label: 'Ubuntu', component: SiUbuntu, category: 'OS/プラットフォーム' },
-  { id: 'SiDebian', label: 'Debian', component: SiDebian, category: 'OS/プラットフォーム' },
-  { id: 'SiCentos', label: 'CentOS', component: SiCentos, category: 'OS/プラットフォーム' },
-  { id: 'SiRedhat', label: 'Red Hat', component: SiRedhat, category: 'OS/プラットフォーム' },
-  { id: 'FaWindows', label: 'Windows', component: FaWindows, category: 'OS/プラットフォーム' },
-  { id: 'SiApple', label: 'macOS', component: SiApple, category: 'OS/プラットフォーム' },
+  { id: 'linux', label: 'Linux', category: 'OS/プラットフォーム' },
+  { id: 'ubuntu', label: 'Ubuntu', category: 'OS/プラットフォーム' },
+  { id: 'debian', label: 'Debian', category: 'OS/プラットフォーム' },
+  { id: 'centos', label: 'CentOS', category: 'OS/プラットフォーム' },
+  { id: 'redhat', label: 'Red Hat', category: 'OS/プラットフォーム' },
+  { id: 'apple', label: 'macOS', category: 'OS/プラットフォーム' },
+  { id: 'windows', label: 'Windows', category: 'OS/プラットフォーム' },
   
   // モバイル
-  { id: 'SiAndroid', label: 'Android', component: SiAndroid, category: 'モバイル' },
-  { id: 'SiIos', label: 'iOS', component: SiIos, category: 'モバイル' },
-  { id: 'SiReactNativeIcon', label: 'React Native', component: SiReactNativeIcon, category: 'モバイル' },
-  { id: 'SiFlutter', label: 'Flutter', component: SiFlutter, category: 'モバイル' },
+  { id: 'android', label: 'Android', category: 'モバイル' },
+  { id: 'flutter', label: 'Flutter', category: 'モバイル' },
+  { id: 'react', label: 'React Native', category: 'モバイル' },
+  { id: 'swift', label: 'iOS/Swift', category: 'モバイル' },
 ];
 
-// IconDisplayコンポーネントを更新して画像URLをサポート
-const IconDisplay: React.FC<{ iconId: string; size?: number }> = ({ iconId, size = 24 }) => {
-  // URLからアイコンIDを抽出する関数
-  const extractIconIdFromUrl = (url: string): string => {
-    // URLの場合は最後の部分を抽出
-    if (url.includes('/media/')) {
-      const parts = url.split('/');
-      const lastPart = parts[parts.length - 1];
-      console.log(`[IconDisplay] URLからアイコンIDを抽出: ${url} → ${lastPart}`);
-      return lastPart;
+// アイコンを表示するコンポーネント
+const IconDisplay: React.FC<{ iconId: string }> = ({ iconId }) => {
+  const [currentVariant, setCurrentVariant] = useState<string>('original');
+  const [error, setError] = useState<boolean>(false);
+  
+  // アイコンIDを正規化する関数
+  const normalizeIconId = (id: string): string => {
+    if (!id) return '';
+    
+    // URLをデコード
+    let decodedId = decodeURIComponent(id);
+    
+    // URLの場合は最後のパスセグメントを取得
+    if (decodedId.startsWith('http')) {
+      decodedId = decodedId.split('/').pop() || '';
     }
-    return url;
+    
+    // Siプレフィックスを削除
+    if (decodedId.startsWith('Si')) {
+      decodedId = decodedId.substring(2).toLowerCase();
+    }
+    
+    return decodedId;
   };
-
-  // 実際に使用するアイコンID
-  const effectiveIconId = iconId.includes('/media/') ? extractIconIdFromUrl(iconId) : iconId;
   
-  // 通常のアイコン定義を検索
-  const iconDef = AVAILABLE_ICONS.find(i => i.id === effectiveIconId);
+  // アイコンのURLを生成する関数
+  const getIconUrl = (id: string, variant: string): string => {
+    const normalizedId = normalizeIconId(id);
+    return `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${normalizedId}/${normalizedId}-${variant}.svg`;
+  };
   
-  // コンポーネントがマウントされたときにコンソールにログを出力
-  useEffect(() => {
-    if (iconId.includes('/media/')) {
-      console.log(`[IconDisplay] URL形式のアイコン: ${iconId} → 抽出ID: ${effectiveIconId}, 定義あり=${!!iconDef}`);
-    }
+  // エラー発生時の処理
+  const handleIconError = () => {
+    const normalizedId = normalizeIconId(iconId);
+    console.log('Deviconアイコン読み込みエラー:', `${normalizedId}-${currentVariant}`);
     
-    if (iconDef) {
-      console.log(`[IconDisplay] アイコン表示: id=${iconId}, 定義あり=true`, {
-        id: iconDef.id,
-        label: iconDef.label,
-        hasComponent: !!iconDef.component,
-        imageUrl: iconDef.imageUrl || 'なし'
-      });
+    // 次のバリエーションを試す
+    const variants = ['original', 'plain', 'line', 'plain-wordmark', 'original-wordmark'];
+    const currentIndex = variants.indexOf(currentVariant);
+    
+    if (currentIndex < variants.length - 1) {
+      console.log('次のバリエーションを試行:', variants[currentIndex + 1]);
+      setCurrentVariant(variants[currentIndex + 1]);
     } else {
-      console.log(`[IconDisplay] アイコン表示: id=${iconId}, 定義あり=false`, 'アイコン定義なし');
+      console.log('全バリエーション失敗:', normalizedId);
+      setError(true);
     }
-  }, [iconId, iconDef, effectiveIconId]);
-
-  // URLの場合でも、アイコンIDが抽出できていればコンポーネントを使う
-  if (iconDef) {
-    if (iconDef.imageUrl) {
-      console.log(`[IconDisplay] 画像URLを使用: ${iconDef.imageUrl}`);
-      
-      // 画像のプレビューを実際に試す
-      return (
-        <div style={{ position: 'relative', width: size, height: size }}>
-          <img 
-            src={iconDef.imageUrl} 
-            alt={iconDef.label} 
-            width={size} 
-            height={size} 
-            style={{ objectFit: 'contain' }}
-            onError={(e) => {
-              console.error(`[IconDisplay] 画像の読み込みに失敗: ${iconDef.imageUrl}`, e);
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-          <div style={{
-            display: 'none',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: size,
-            height: size,
-            backgroundColor: '#f0f0f0',
-            borderRadius: '4px',
-            fontSize: size * 0.5,
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            {iconDef.label.substring(0, 2)}
-          </div>
-        </div>
-      );
-    }
-    
-    if (iconDef.component) {
-      console.log(`[IconDisplay] コンポーネントを使用: ${iconDef.id}`);
-      try {
-        return React.createElement(
-          iconDef.component as React.ComponentType<{ size?: number }>,
-          { size }
-        );
-      } catch (error) {
-        console.error(`[IconDisplay] コンポーネントの描画エラー: ${iconDef.id}`, error);
-        return (
-          <div style={{ 
-            width: size, 
-            height: size, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            backgroundColor: '#ffeeee',
-            borderRadius: '4px',
-            fontSize: size * 0.5,
-            color: 'red'
-          }}>
-            {iconDef.id.substring(0, 2)}
-          </div>
-        );
-      }
-    }
-    
-    console.warn(`[IconDisplay] 警告: アイコン「${iconDef.label}」は画像URLもコンポーネントも持っていません`);
-    return (
-      <div style={{ 
-        width: size, 
-        height: size, 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        backgroundColor: '#ffffdd',
-        borderRadius: '4px',
-        fontSize: size * 0.4,
-        color: '#666600'
-      }}>
-        {iconDef.label.substring(0, 2)}
-      </div>
-    );
-  }
-
-  // URLの場合は直接画像として表示
-  if (iconId.startsWith('http://') || iconId.startsWith('https://') || iconId.includes('/media/')) {
-    console.log(`[IconDisplay] URL形式のアイコンを直接表示: ${iconId}`);
-    return (
-      <div style={{ position: 'relative', width: size, height: size }}>
-        <img 
-          src={iconId} 
-          alt="スキルアイコン" 
-          width={size} 
-          height={size} 
-          style={{ objectFit: 'contain' }}
-          onError={(e) => {
-            console.error(`[IconDisplay] 画像の読み込みに失敗: ${iconId}`, e);
-            e.currentTarget.style.display = 'none';
-            const fallback = e.currentTarget.parentElement?.querySelector('.icon-fallback');
-            if (fallback) {
-              (fallback as HTMLElement).style.display = 'flex';
-            }
-          }}
-        />
-        <div 
-          className="icon-fallback"
-          style={{
-            display: 'none',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: size,
-            height: size,
-            backgroundColor: '#f0f0f0',
-            borderRadius: '4px',
-            fontSize: size * 0.5,
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          {effectiveIconId.substring(0, 2)}
-        </div>
-      </div>
-    );
+  };
+  
+  // エラー状態をリセット
+  useEffect(() => {
+    setError(false);
+    setCurrentVariant('original');
+  }, [iconId]);
+  
+  if (!iconId) return null;
+  
+  console.log('IconDisplay: アイコンID=', iconId);
+  console.log('アイコン識別子:', normalizeIconId(iconId));
+  
+  if (error) {
+    return <Box sx={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <ErrorIcon color="error" />
+    </Box>;
   }
   
-  // iconDefがなく、URLでもない場合のフォールバック（常に何かを返す必要がある）
-  console.warn(`[IconDisplay] 警告: アイコンID「${iconId}」に対応する定義が見つかりません`);
   return (
-    <div style={{ 
-      width: size, 
-      height: size, 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      backgroundColor: '#f0f0f0',
-      borderRadius: '4px',
-      fontSize: size * 0.5
-    }}>
-      {iconId.substring(0, 2)}
-    </div>
+    <Box sx={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <img
+        src={getIconUrl(iconId, currentVariant)}
+        alt={`${normalizeIconId(iconId)} icon`}
+        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        onError={handleIconError}
+      />
+    </Box>
   );
 };
 
-// GridIconDisplayコンポーネントも同様に更新
+// アイコングリッド表示用のコンポーネント
 const GridIconDisplay: React.FC<{ iconId: string }> = ({ iconId }) => {
-  // URLからアイコンIDを抽出する関数
-  const extractIconIdFromUrl = (url: string): string => {
-    // URLの場合は最後の部分を抽出
-    if (url.includes('/media/')) {
-      const parts = url.split('/');
-      return parts[parts.length - 1];
-    }
-    return url;
-  };
-
-  // 実際に使用するアイコンID
-  const effectiveIconId = iconId.includes('/media/') ? extractIconIdFromUrl(iconId) : iconId;
-  
-  // アイコン定義を検索
-  const iconDef = AVAILABLE_ICONS.find(i => i.id === effectiveIconId);
-  
-  if (iconDef) {
-    if (iconDef.imageUrl) {
-      return (
-        <div style={{ position: 'relative', width: 32, height: 32 }}>
-          <img 
-            src={iconDef.imageUrl} 
-            alt={iconDef.label} 
-            width={32} 
-            height={32} 
-            style={{ objectFit: 'contain' }}
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              (e.currentTarget.nextSibling as HTMLElement).style.display = 'flex';
-            }}
-          />
-          <div style={{
-            display: 'none',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: 32,
-            height: 32,
-            backgroundColor: '#f0f0f0',
-            borderRadius: '4px',
-            fontSize: 16,
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            {iconDef.label.substring(0, 2)}
-          </div>
-        </div>
-      );
-    }
-    
-    if (iconDef.component) {
-      try {
-        return React.createElement(
-          iconDef.component as React.ComponentType<{ size?: number }>,
-          { size: 32 }
-        );
-      } catch (error) {
-        return (
-          <div style={{ 
-            width: 32, 
-            height: 32, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            backgroundColor: '#ffeeee',
-            borderRadius: '4px',
-            fontSize: 16,
-            color: 'red'
-          }}>
-            {iconDef.id.substring(0, 2)}
-          </div>
-        );
-      }
-    }
-    
-    return (
-      <div style={{ 
-        width: 32, 
-        height: 32, 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        backgroundColor: '#ffffdd',
-        borderRadius: '4px',
-        fontSize: 14,
-        color: '#666600'
-      }}>
-        {iconDef.label.substring(0, 2)}
-      </div>
-    );
-  }
-
-  // URLの場合は直接画像として表示
-  if (iconId.startsWith('http://') || iconId.startsWith('https://') || iconId.includes('/media/')) {
-    return (
-      <div style={{ position: 'relative', width: 32, height: 32 }}>
-        <img 
-          src={iconId} 
-          alt="スキルアイコン" 
-          width={32} 
-          height={32} 
-          style={{ objectFit: 'contain' }}
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-            const fallback = e.currentTarget.parentElement?.querySelector('.grid-icon-fallback');
-            if (fallback) {
-              (fallback as HTMLElement).style.display = 'flex';
-            }
-          }}
-        />
-        <div 
-          className="grid-icon-fallback"
-          style={{
-            display: 'none',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: 32,
-            height: 32,
-            backgroundColor: '#f0f0f0',
-            borderRadius: '4px',
-            fontSize: 16,
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          {effectiveIconId.substring(0, 2)}
-        </div>
-      </div>
-    );
-  }
-  
-  // iconDefがなく、URLでもない場合のフォールバック
   return (
-    <div style={{ 
-      width: 32, 
-      height: 32, 
+    <Box sx={{ 
+      position: 'relative', 
+      width: 40, 
+      height: 40, 
       display: 'flex', 
       alignItems: 'center', 
-      justifyContent: 'center',
-      backgroundColor: '#f0f0f0',
-      borderRadius: '4px',
-      fontSize: 16
+      justifyContent: 'center'
     }}>
-      {iconId.substring(0, 2)}
-    </div>
+      <IconDisplay iconId={iconId} />
+    </Box>
   );
 };
 
@@ -509,208 +263,69 @@ const getCategoryStyle = (categoryName: string): { bg: string; icon: string; col
 
 const SkillsEdit: React.FC = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
-  const [categories, setCategories] = useState<SkillCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [editingSkill, setEditingSkill] = useState<Partial<Skill> | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [uploadingIcon, setUploadingIcon] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [currentSkill, setCurrentSkill] = useState<Partial<Skill>>({ name: '', description: '', level: 3, category: undefined, icon: undefined, experience_years: 0, order: 0 });
   const [skillToDelete, setSkillToDelete] = useState<Skill | null>(null);
-  
-  // アイコン選択関連
-  const [iconSelectOpen, setIconSelectOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<SkillCategory | null>(null);
+  const [skillDialogOpen, setSkillDialogOpen] = useState<boolean>(false);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState<boolean>(false);
+  const [newCategory, setNewCategory] = useState<Partial<SkillCategory>>({ name: '', order: 1 });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<boolean>(false);
+  const [savingSkill, setSavingSkill] = useState<boolean>(false);
+  const [savingCategory, setSavingCategory] = useState<boolean>(false);
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
-  const [iconSearchTerm, setIconSearchTerm] = useState('');
-  const [iconTabValue, setIconTabValue] = useState(0);
-  
-  // カテゴリ作成関連
-  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
-  const [newCategory, setNewCategory] = useState<{name: string, order: number}>({name: '', order: 0});
-  const [savingCategory, setSavingCategory] = useState(false);
-  const [categoryError, setCategoryError] = useState('');
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [iconDialogOpen, setIconDialogOpen] = useState<boolean>(false);
+  const [customIconUrl, setCustomIconUrl] = useState<string>('');
+  const [iconSearchQuery, setIconSearchQuery] = useState<string>('');
+  const [uploadModalOpen, setUploadModalOpen] = useState<boolean>(false);
+  const [iconUploadFile, setIconUploadFile] = useState<File | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<boolean>(false);
+  const [selectedIconCategory, setSelectedIconCategory] = useState<string>('all');
+  const [showCategoryDialog, setShowCategoryDialog] = useState<boolean>(false);
+  const [editingCategory, setEditingCategory] = useState<SkillCategory | null>(null);
+  const theme = useTheme();
 
   useEffect(() => {
     fetchData();
   }, []);
-  
-  // スキルデータがロードされた後、アイコン情報をログに出力する
-  useEffect(() => {
-    if (skills.length > 0) {
-      console.log('--- スキルアイコン情報のデバッグ出力 ---');
-      skills.forEach(skill => {
-        if (skill.icon) {
-          const iconDef = AVAILABLE_ICONS.find(i => i.id === skill.icon);
-          console.log(`スキル「${skill.name}」のアイコン:`, {
-            id: skill.icon,
-            定義あり: !!iconDef,
-            label: iconDef?.label,
-            component: !!iconDef?.component,
-            imageUrl: iconDef?.imageUrl
-          });
-        }
-      });
-    }
-  }, [skills]);
 
-  // アイコンダイアログを開く
-  const handleOpenIconSelect = () => {
-    setIconSelectOpen(true);
-    setIconSearchTerm('');
-    setIconTabValue(0);
-    // 現在のアイコンを選択状態にする
-    setSelectedIconId(editingSkill?.icon || null);
-  };
-
-  // アイコンダイアログを閉じる
-  const handleCloseIconSelect = () => {
-    setIconSelectOpen(false);
-  };
-
-  // アイコンを選択する
-  const handleSelectIcon = (iconId: string) => {
-    // 編集中のスキルデータを直接更新して、UIに即座に反映
-    if (editingSkill) {
-      const selectedIcon = AVAILABLE_ICONS.find(i => i.id === iconId);
-      
-      // 新しいスキルオブジェクトを作成して、現在の編集中スキルを更新
-      const updatedSkill = {
-        ...editingSkill,
-        icon: iconId
-      };
-      
-      // スキル名も自動更新（既存の名前があっても更新）
-      if (selectedIcon) {
-        updatedSkill.name = selectedIcon.label;
-      }
-      
-      // ステートを更新
-      setEditingSkill(updatedSkill);
-      setSelectedIconId(iconId);
-      
-      // 重要: 検証エラーをクリアする（アイコン選択時にエラーが出ないように）
-      setValidationErrors({
-        ...validationErrors,
-        name: '',
-        icon: ''
-      });
-    }
-    
-    // ダイアログを閉じる
-    handleCloseIconSelect();
-  };
-
-  // アイコンタブを切り替える
-  const handleIconTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setIconTabValue(newValue);
-  };
-
-  // アイコン検索の結果
-  const getFilteredIcons = () => {
-    const searchTerm = iconSearchTerm.toLowerCase();
-    
-    let filteredIcons = AVAILABLE_ICONS;
-    
-    // タブでフィルター
-    if (iconTabValue > 0) {
-      const category = ICON_CATEGORIES[iconTabValue - 1];
-      filteredIcons = filteredIcons.filter(icon => icon.category === category);
-    }
-    
-    // 検索語でフィルター
-    if (searchTerm) {
-      filteredIcons = filteredIcons.filter(icon => 
-        icon.label.toLowerCase().includes(searchTerm) || 
-        icon.id.toLowerCase().includes(searchTerm)
-      );
-    }
-    
-    return filteredIcons;
-  };
-
+  // スキルとカテゴリの取得
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [categoriesData, skillsData] = await Promise.all([
-        skillAPI.getCategories(),
-        skillAPI.getSkills()
+      // スキルとカテゴリを同時に取得
+      const [skillsData, categoriesData] = await Promise.all([
+        skillAPI.getSkills(),
+        skillAPI.getCategories()
       ]);
       
-      if (!categoriesData || categoriesData.length === 0) {
-        setError('カテゴリが存在しません。デフォルトカテゴリを表示します。');
-        
-        // デフォルトカテゴリ（仮表示用）
-        const defaultCategories = [
-          { id: -1, name: 'フロントエンド', order: 1 },
-          { id: -2, name: 'バックエンド', order: 2 },
-          { id: -3, name: 'インフラ', order: 3 },
-          { id: -4, name: 'その他', order: 4 }
-        ];
-        
-        setCategories(defaultCategories);
-      } else {
-        setCategories(categoriesData);
+      // カテゴリを順序で並べ替え
+      const sortedCategories = [...categoriesData].sort((a, b) => a.order - b.order);
+      setSkillCategories(sortedCategories);
+      
+      // スキルをカテゴリごとに分類
+      setSkills(skillsData);
+      
+      // 初期カテゴリ選択
+      if (sortedCategories.length > 0) {
+        setSelectedCategory(sortedCategories[0]);
       }
       
-      setSkills(skillsData);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError('データの取得に失敗しました');
-      
-      // エラー時もデフォルトカテゴリを表示
-      const defaultCategories = [
-        { id: -1, name: 'フロントエンド', order: 1 },
-        { id: -2, name: 'バックエンド', order: 2 },
-        { id: -3, name: 'インフラ', order: 3 },
-        { id: -4, name: 'その他', order: 4 }
-      ];
-      setCategories(defaultCategories);
-    } finally {
+      setLoading(false);
+      setError(null);
+    } catch (err: any) {
+      console.error('データの取得に失敗しました:', err);
+      setError('スキルデータの取得に失敗しました。ページを再読み込みしてください。');
       setLoading(false);
     }
   };
 
-  // カテゴリダイアログを開く
-  const handleOpenCategoryDialog = () => {
-    setNewCategory({
-      name: '',
-      order: categories.length + 1
-    });
-    setCategoryError('');
-    setCategoryDialogOpen(true);
-  };
-
-  // カテゴリダイアログを閉じる
-  const handleCloseCategoryDialog = () => {
-    setCategoryDialogOpen(false);
-  };
-
-  // カテゴリを作成する
-  const handleCreateCategory = async () => {
-    if (!newCategory.name.trim()) {
-      setCategoryError('カテゴリ名は必須です');
-      return;
-    }
-
-    setSavingCategory(true);
-    try {
-      const createdCategory = await skillAPI.createCategory(newCategory);
-      setCategories([...categories, createdCategory]);
-      setSuccess(`カテゴリ「${createdCategory.name}」を作成しました`);
-      handleCloseCategoryDialog();
-    } catch (error) {
-      console.error('Error creating category:', error);
-      setCategoryError('カテゴリの作成に失敗しました');
-    } finally {
-      setSavingCategory(false);
-    }
-  };
-
+  // スキル検証
   const validateSkill = (skill: Partial<Skill>): Record<string, string> => {
     const errors: Record<string, string> = {};
     
@@ -720,11 +335,6 @@ const SkillsEdit: React.FC = () => {
     
     if (!skill.category) {
       errors.category = 'カテゴリーは必須です';
-    }
-    
-    // アイコンも必須項目にする
-    if (!skill.icon) {
-      errors.icon = 'アイコンを選択してください';
     }
     
     if (skill.level === undefined || skill.level < 1 || skill.level > 5) {
@@ -738,217 +348,213 @@ const SkillsEdit: React.FC = () => {
     return errors;
   };
 
-  const handleOpenDialog = (skill?: Skill) => {
+  // スキル編集ダイアログを開く
+  const handleOpenSkillDialog = (skill?: Skill) => {
     if (skill) {
-      setEditingSkill({...skill});
+      setCurrentSkill({...skill});
+      setIsEditMode(true);
     } else {
-      setEditingSkill({
+      setCurrentSkill({
         name: '',
-        category: categories[0]?.id,
-        level: 3,
-        experience_years: 1,
         description: '',
+        level: 3,
+        category: selectedCategory?.id || undefined,
+        icon: undefined,
+        experience_years: 0,
         order: skills.length + 1
       });
+      setIsEditMode(false);
     }
-    setValidationErrors({});
-    setDialogOpen(true);
+    setSkillDialogOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
-    setEditingSkill(null);
+  // スキル編集ダイアログを閉じる
+  const handleCloseSkillDialog = () => {
+    setSkillDialogOpen(false);
   };
 
-  const handleDialogChange = (field: keyof Skill, value: any) => {
-    if (!editingSkill) return;
+  // アイコン選択ダイアログを開く
+  const handleOpenIconDialog = () => {
+    setIconDialogOpen(true);
+  };
+
+  // アイコン選択ダイアログを閉じる
+  const handleCloseIconDialog = () => {
+    setIconDialogOpen(false);
+  };
+
+  // アイコンを選択
+  const handleSelectIcon = (iconId: string) => {
+    // アイコン定義を検索
+    const selectedIcon = AVAILABLE_ICONS.find(i => i.id === iconId);
+    console.log('アイコン選択:', iconId, selectedIcon);
     
-    setEditingSkill({
-      ...editingSkill,
-      [field]: value
+    // スキル名が空かどうかを確認
+    const isNameEmpty = !currentSkill.name || currentSkill.name.trim() === '';
+    console.log('スキル名が空か:', isNameEmpty, '現在の名前:', currentSkill.name);
+    
+    // アイコンIDを正規化
+    let normalizedIconId = iconId;
+    if (normalizedIconId.startsWith('http')) {
+      normalizedIconId = decodeURIComponent(normalizedIconId).split('/').pop() || '';
+    }
+    if (normalizedIconId.startsWith('Si')) {
+      normalizedIconId = normalizedIconId.substring(2).toLowerCase();
+    }
+    
+    // currentSkillのステートを更新
+    setCurrentSkill(prev => {
+      const updatedSkill = {
+        ...prev,
+        icon: `Si${normalizedIconId}`, // Siプレフィックスを付けて保存
+        // スキル名がまだ設定されていないか空の場合にのみ、アイコンのラベルをスキル名として設定
+        name: isNameEmpty && selectedIcon ? selectedIcon.label : prev.name
+      };
+      console.log('更新後のスキル:', updatedSkill);
+      return updatedSkill;
     });
     
-    // 該当フィールドのバリデーションエラーをクリア
-    if (validationErrors[field]) {
-      setValidationErrors({
-        ...validationErrors,
-        [field]: ''
-      });
-    }
-  };
-
-  // アイコンをクリックしたときの処理
-  const handleIconClick = () => {
-    // 常にアイコン選択ダイアログを開く
-    handleOpenIconSelect();
-  };
-
-  const handleIconChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!editingSkill?.id || !e.target.files || e.target.files.length === 0) return;
+    // 選択されたアイコンIDを状態に保存
+    setSelectedIconId(iconId);
     
-    const file = e.target.files[0];
-    setUploadingIcon(true);
+    // 更新が完了した後のスキル情報を表示
+    setTimeout(() => {
+      console.log('アイコン選択後の現在のスキル状態:', currentSkill);
+    }, 100);
     
-    try {
-      const updatedSkill = await skillAPI.uploadSkillIcon(editingSkill.id, file);
-      setEditingSkill({
-        ...editingSkill,
-        icon: updatedSkill.icon
-      });
-      setSuccess('アイコンをアップロードしました');
-    } catch (error) {
-      console.error('Error uploading icon:', error);
-      setError('アイコンのアップロードに失敗しました');
-    } finally {
-      setUploadingIcon(false);
-    }
+    // ダイアログを閉じる
+    setIconDialogOpen(false);
   };
 
+  // スキル保存
   const handleSaveSkill = async () => {
-    if (!editingSkill) return;
+    if (!currentSkill) return;
     
-    // スキルデータのディープコピーを作成して送信用データを準備
-    const skillToSave = {...editingSkill};
-    const iconId = skillToSave.icon; // アイコンIDを保存
-    
-    // 必須フィールドの確認
-    const errors = validateSkill(skillToSave);
+    // バリデーション
+    const errors = validateSkill(currentSkill);
     if (Object.keys(errors).length > 0) {
       console.error('バリデーションエラー:', errors);
-      setValidationErrors(errors);
+      setError(Object.values(errors).join('\n'));
       return;
     }
     
-    // 送信前にデータを整形
-    // iconフィールドを送信データから除外（APIエラーの原因）
-    const { icon, ...skillDataWithoutIcon } = skillToSave;
-    
-    const formattedSkill: Partial<Skill> = {
-      ...skillDataWithoutIcon,
-      // 空文字列は空文字列のまま送信（バックエンドの期待する形式）
-      name: skillToSave.name?.trim() || '',
-      description: skillToSave.description?.trim() || '',
-      // categoryとlevelは数値であることを確認
-      category: typeof skillToSave.category === 'number' ? skillToSave.category : parseInt(String(skillToSave.category), 10),
-      level: typeof skillToSave.level === 'number' ? skillToSave.level : parseInt(String(skillToSave.level), 10),
-      experience_years: typeof skillToSave.experience_years === 'number' ? skillToSave.experience_years : parseFloat(String(skillToSave.experience_years))
-    };
-    
-    console.log('送信するスキルデータ:', formattedSkill);
-    console.log('アイコンID（別途処理）:', iconId);
-    
-    setSaving(true);
+    setSavingSkill(true);
     try {
-      let savedSkill: Skill;
-      if (formattedSkill.id) {
-        // 既存スキルの更新
-        savedSkill = await skillAPI.updateSkill(formattedSkill);
-        console.log('スキルを更新しました:', savedSkill);
-        
-        // アイコンIDを別途更新
-        if (iconId && savedSkill.id) {
-          try {
-            const updatedSkill = await updateIconField(savedSkill.id, iconId);
-            if (updatedSkill) {
-              savedSkill = updatedSkill;
-            }
-          } catch (iconError) {
-            console.error('アイコン更新エラー:', iconError);
-          }
+      // バックエンドに送信するデータを整形
+      const skillData: Partial<Skill> = { ...currentSkill };
+      
+      // アイコンIDが存在する場合は、そのまま保存
+      if (skillData.icon) {
+        // アイコンIDを正規化
+        let iconId = skillData.icon;
+        if (iconId.startsWith('http')) {
+          iconId = decodeURIComponent(iconId).split('/').pop() || '';
         }
-        
-        // 既存のスキルリストを更新
+        if (iconId.startsWith('Si')) {
+          iconId = iconId.substring(2).toLowerCase();
+        }
+        console.log('保存するアイコンID:', iconId);
+        skillData.icon_id = iconId;
+        delete skillData.icon;
+      }
+      
+      console.log('バックエンドに送信するデータ:', skillData);
+      
+      let savedSkill: Skill;
+      
+      if (isEditMode && currentSkill.id) {
+        // 既存スキルの更新
+        savedSkill = await skillAPI.updateSkill(skillData);
         setSkills(skills.map(s => s.id === savedSkill.id ? savedSkill : s));
+        setSuccess(`スキル「${savedSkill.name}」を更新しました`);
       } else {
         // 新規スキルの作成
-        savedSkill = await skillAPI.createSkill(formattedSkill);
-        console.log('新しいスキルを作成しました:', savedSkill);
-        
-        // アイコンIDを別途更新
-        if (iconId && savedSkill.id) {
-          try {
-            const updatedSkill = await updateIconField(savedSkill.id, iconId);
-            if (updatedSkill) {
-              savedSkill = updatedSkill;
-            }
-          } catch (iconError) {
-            console.error('アイコン更新エラー:', iconError);
-          }
-        }
-        
-        // 新しいスキルをリストに追加
+        savedSkill = await skillAPI.createSkill(skillData);
         setSkills([...skills, savedSkill]);
+        setSuccess(`スキル「${savedSkill.name}」を作成しました`);
       }
-      setSuccess(`スキル「${savedSkill.name}」を保存しました`);
-      handleCloseDialog();
       
-      // スキル保存後にすぐにデータを再取得して最新の状態を表示
+      // 成功メッセージを表示して3秒後に消す
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+      
+      // データを再取得して最新の状態を表示
       fetchData();
-    } catch (error: any) {
-      console.error('Error saving skill:', error);
-      // エラーレスポンスの詳細を表示
-      const errorDetail = error.response?.data 
-        ? JSON.stringify(error.response.data) 
-        : error.message || 'スキルの保存に失敗しました';
       
-      console.error('詳細エラー:', errorDetail);
-      setError(`スキルの保存に失敗しました: ${errorDetail}`);
+      // ダイアログを閉じる
+      setSkillDialogOpen(false);
+    } catch (err: any) {
+      console.error('スキルの保存に失敗しました:', err);
+      const errorMessage = err.response?.data?.icon 
+        ? `アイコンフィールドのエラー: ${err.response.data.icon.join(', ')}`
+        : err.response?.data 
+          ? `APIエラー: ${JSON.stringify(err.response.data)}`
+          : 'スキルの保存に失敗しました。もう一度お試しください。';
+      setError(errorMessage);
     } finally {
-      setSaving(false);
-    }
-  };
-  
-  // アイコンフィールドを別途更新する関数
-  const updateIconField = async (skillId: number, iconId: string): Promise<Skill | null> => {
-    try {
-      console.log(`スキル ${skillId} のアイコンを ${iconId} に更新します`);
-      
-      // APIエンドポイントのURLを修正 - '/api/'プレフィックスを追加
-      const response = await fetch(`${API_BASE_URL}/api/skills/${skillId}/set_icon/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Token ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ icon_id: iconId })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`アイコン更新エラー: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log('アイコン更新成功:', data);
-      return data as Skill;
-    } catch (error) {
-      console.error('アイコン更新に失敗しました:', error);
-      return null;
+      setSavingSkill(false);
     }
   };
 
-  const openDeleteConfirm = (skill: Skill) => {
+  // カテゴリダイアログを閉じる
+  const handleCloseCategoryDialog = () => {
+    setCategoryDialogOpen(false);
+  };
+
+  // カテゴリを作成
+  const handleCreateCategory = async () => {
+    if (!newCategory.name?.trim()) {
+      setError('カテゴリ名は必須です');
+      return;
+    }
+    
+    setSavingCategory(true);
+    try {
+      const createdCategory = await skillAPI.createCategory(newCategory);
+      setSkillCategories([...skillCategories, createdCategory]);
+      setSuccess(`カテゴリ「${createdCategory.name}」を作成しました`);
+      
+      // 成功メッセージを表示して3秒後に消す
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+      
+      // ダイアログを閉じる
+      setCategoryDialogOpen(false);
+    } catch (err) {
+      console.error('カテゴリの作成に失敗しました:', err);
+      setError('カテゴリの作成に失敗しました。もう一度お試しください。');
+    } finally {
+      setSavingCategory(false);
+    }
+  };
+
+  // スキル削除の確認ダイアログを開く
+  const handleOpenDeleteConfirm = (skill: Skill) => {
     setSkillToDelete(skill);
     setDeleteConfirmOpen(true);
   };
 
+  // スキルを削除
   const handleDeleteSkill = async () => {
     if (!skillToDelete) return;
     
     try {
       await skillAPI.deleteSkill(skillToDelete.id);
-      // スキルリストから削除
       setSkills(skills.filter(s => s.id !== skillToDelete.id));
       setSuccess(`スキル「${skillToDelete.name}」を削除しました`);
+      
+      // 成功メッセージを表示して3秒後に消す
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+      
       setDeleteConfirmOpen(false);
       setSkillToDelete(null);
-    } catch (error) {
-      console.error('Error deleting skill:', error);
-      // エラー内容の詳細を表示
-      const errorMessage = error instanceof Error 
-        ? `スキルの削除に失敗しました: ${error.message}` 
-        : 'スキルの削除に失敗しました';
-      setError(errorMessage);
-      // ダイアログは閉じない - 再試行できるようにする
+    } catch (err) {
+      console.error('スキルの削除に失敗しました:', err);
+      setError('スキルの削除に失敗しました。もう一度お試しください。');
     }
   };
 
@@ -964,401 +570,423 @@ const SkillsEdit: React.FC = () => {
     }
   };
 
-  const theme = useTheme();
+  // カテゴリに属するスキルをフィルター
+  const getSkillsByCategory = (categoryId: number): Skill[] => {
+    return skills.filter(skill => skill.category === categoryId);
+  };
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  // アイコン選択ダイアログのフィルタリング
+  const filteredIcons = AVAILABLE_ICONS.filter(icon => 
+    selectedIconCategory === 'all' || 
+    icon.category === selectedIconCategory
+  );
+
+  const handleDeleteCategory = async (categoryId: number) => {
+    try {
+      await skillAPI.deleteCategory(categoryId);
+      // カテゴリリストを更新
+      const updatedCategories = skillCategories.filter(cat => cat.id !== categoryId);
+      setSkillCategories(updatedCategories);
+      // 削除されたカテゴリに属するスキルを更新
+      const updatedSkills = skills.map(skill => {
+        if (skill.category === categoryId) {
+          return { ...skill, category: null };
+        }
+        return skill;
+      });
+      setSkills(updatedSkills);
+      // 選択中のカテゴリが削除された場合、選択をクリア
+      if (selectedCategory?.id === categoryId) {
+        setSelectedCategory(null);
+      }
+      // 成功メッセージを表示
+      setSuccess('カテゴリを削除しました');
+    } catch (error) {
+      console.error('カテゴリの削除エラー:', error);
+      setError(error instanceof Error ? error.message : 'カテゴリの削除に失敗しました');
+    }
+  };
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ 
-        fontWeight: 'bold', 
-        fontSize: { xs: '1.5rem', sm: '2rem' }, 
-        position: 'relative',
-        '&::after': {
-          content: '""',
-          position: 'absolute',
-          bottom: '-8px',
-          left: 0,
-          width: '40px',
-          height: '4px',
-          backgroundColor: 'primary.main',
-          borderRadius: '2px'
-        }
-      }}>スキル管理</Typography>
-      <Divider sx={{ mb: 4 }} />
-
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
-
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-        <Button
-          variant="outlined"
-          color="primary"
-          startIcon={<CategoryIcon />}
-          onClick={handleOpenCategoryDialog}
-          sx={{ boxShadow: '0 2px 5px rgba(0,0,0,0.08)' }}
-        >
-          カテゴリを追加
-        </Button>
+    <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: 3, 
+          mb: 4, 
+          borderRadius: 2,
+          bgcolor: 'rgba(33, 150, 243, 0.06)',
+          color: 'primary.main',
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', md: 'center' },
+          gap: 2
+        }}
+      >
+        <Box>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              mb: 1
+            }}
+          >
+            <StarIcon sx={{ mr: 1.5, fontSize: '1.75rem' }} />
+            スキル管理
+          </Typography>
+          <Typography variant="body1" sx={{ opacity: 0.9 }}>
+            あなたのスキルを管理し、ポートフォリオに表示できます。カテゴリごとに分けて整理しましょう。
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-          sx={{ boxShadow: '0 3px 5px rgba(0,0,0,0.1)' }}
+          onClick={() => handleOpenSkillDialog()}
+          sx={{ 
+            px: 3, 
+            py: 1,
+            borderRadius: 2,
+            boxShadow: 2,
+            fontWeight: 'bold'
+          }}
         >
-          新しいスキルを追加
+          新規スキル
         </Button>
-      </Box>
+      </Paper>
 
-      {categories.length === 0 ? (
-        <Alert severity="warning" sx={{ my: 4 }}>
-          カテゴリが存在しません。「カテゴリを追加」ボタンをクリックして新しいカテゴリを作成してください。
+      {error && (
+        <Alert severity="error" sx={{ mb: 3, whiteSpace: 'pre-line', borderRadius: 2 }}>
+          {error}
         </Alert>
+      )}
+      
+      {success && (
+        <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
+          {success}
+        </Alert>
+      )}
+
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+          <CircularProgress />
+        </Box>
       ) : (
-        categories.map(category => {
-          // カテゴリごとのスタイリング情報を取得
-          const categoryStyle = getCategoryStyle(category.name);
-          // このカテゴリに属するスキルをフィルタリング
-          const categorySkills = skills.filter(skill => skill.category === category.id);
-          
-          return (
-            <Card key={category.id} sx={{ 
-              mb: 4, 
-              overflow: 'visible',
-              boxShadow: '0 5px 15px rgba(0,0,0,0.05)',
-              borderRadius: 2
-            }}>
-              <Box sx={{ 
-                p: { xs: 2, sm: 3 }, 
-                bgcolor: categoryStyle.bg,
-                borderBottom: '1px solid rgba(0,0,0,0.05)',
-                borderTopLeftRadius: 8,
-                borderTopRightRadius: 8,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2
-              }}>
-                <Box sx={{ 
-                  width: 40, 
-                  height: 40, 
-                  bgcolor: 'white', 
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 3px 5px rgba(0,0,0,0.1)'
-                }}>
-                  <GridIconDisplay iconId={categoryStyle.icon} />
-                </Box>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    fontWeight: 'bold',
-                    color: categoryStyle.color
+        <Paper 
+          elevation={2}
+          sx={{ 
+            borderRadius: 2,
+            overflow: 'hidden',
+            mb: 4
+          }}
+        >
+          <Box 
+            sx={{ 
+              p: 2,
+              bgcolor: alpha(theme.palette.primary.light, 0.05),
+              borderBottom: `1px solid ${theme.palette.divider}`,
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              gap: 2,
+              flexWrap: 'wrap',
+              justifyContent: 'space-between'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <CategoryIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+              <Typography variant="h6" fontWeight="bold">
+                カテゴリ
+              </Typography>
+            </Box>
+
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setNewCategory({ name: '', order: skillCategories.length + 1 });
+                setCategoryDialogOpen(true);
+              }}
+              size="small"
+              sx={{ borderRadius: 2 }}
+            >
+              カテゴリ追加
+            </Button>
+          </Box>
+
+          {skillCategories.length === 0 ? (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <Typography variant="body1" color="text.secondary">
+                カテゴリが登録されていません。「カテゴリ追加」から新しいカテゴリを作成してください。
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs
+                  value={selectedCategory ? skillCategories.findIndex(cat => cat.id === selectedCategory.id) : 0}
+                  onChange={(_, newValue) => setSelectedCategory(skillCategories[newValue] || null)}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                  sx={{
+                    px: 2,
+                    pt: 1
                   }}
                 >
-                  {category.name}
-                  <Typography 
-                    component="span" 
-                    variant="body2" 
+                  {skillCategories.map((category) => (
+                    <Tab 
+                      key={category.id} 
+                      label={category.name}
+                      sx={{ 
+                        fontWeight: 'medium',
+                        minWidth: 100,
+                        textTransform: 'none'
+                      }}
+                    />
+                  ))}
+                </Tabs>
+                {selectedCategory && (
+                  <Box 
                     sx={{ 
-                      ml: 1.5,
-                      color: 'text.secondary',
-                      bgcolor: 'rgba(0,0,0,0.04)',
-                      px: 1,
-                      py: 0.5,
-                      borderRadius: 5
+                      display: 'flex', 
+                      justifyContent: 'flex-end', 
+                      alignItems: 'center',
+                      px: 2,
+                      pb: 1,
+                      gap: 1
                     }}
                   >
-                    {categorySkills.length}件
-                  </Typography>
-                </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setEditingCategory(selectedCategory);
+                        setShowCategoryDialog(true);
+                      }}
+                      sx={{ 
+                        color: theme.palette.primary.main,
+                        '&:hover': {
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        }
+                      }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        if (window.confirm('このカテゴリを削除してもよろしいですか？\nこのカテゴリに属するスキルは未分類になります。')) {
+                          handleDeleteCategory(selectedCategory.id);
+                        }
+                      }}
+                      sx={{ 
+                        color: theme.palette.error.main,
+                        '&:hover': {
+                          bgcolor: alpha(theme.palette.error.main, 0.1),
+                        }
+                      }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                )}
               </Box>
-              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                {categorySkills.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', my: 2, textAlign: 'center' }}>
-                    このカテゴリーにはスキルがありません
-                  </Typography>
-                ) : (
-                  <Grid container spacing={3}>
-                    {categorySkills.map((skill) => (
-                      <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={skill.id}>
-                        <Card 
-                          variant="outlined" 
-                          sx={{ 
-                            height: '100%',
-                            position: 'relative',
-                            borderColor: 'transparent',
-                            borderRadius: 2,
-                            transition: 'all 0.3s ease',
-                            boxShadow: skill.is_highlighted 
-                              ? '0 5px 15px rgba(255,152,0,0.2)' 
-                              : '0 3px 10px rgba(0,0,0,0.06)',
-                            '&:hover': {
-                              transform: 'translateY(-5px)',
-                              boxShadow: skill.is_highlighted 
-                                ? '0 8px 20px rgba(255,152,0,0.3)' 
-                                : '0 8px 20px rgba(0,0,0,0.1)',
-                            },
-                            bgcolor: skill.is_highlighted ? 'rgba(255,248,225, 0.5)' : 'white',
-                            overflow: 'hidden'
-                          }}
-                        >
-                          {skill.is_highlighted && (
-                            <Box 
-                              sx={{ 
-                                position: 'absolute', 
-                                top: -10, 
-                                right: -10, 
-                                backgroundColor: 'warning.main',
-                                color: 'warning.contrastText',
-                                borderRadius: '50%',
-                                width: 32,
-                                height: 32,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                                zIndex: 1
-                              }}
-                            >
-                              <StarIcon fontSize="small" />
-                            </Box>
-                          )}
-                          <CardContent sx={{ pt: 2.5, pb: 1.5 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                              {skill.icon ? (
+
+              {selectedCategory && (
+                <Box sx={{ p: 3 }}>
+                  {getSkillsByCategory(selectedCategory.id).length === 0 ? (
+                    <Box sx={{ p: 4, textAlign: 'center' }}>
+                      <Typography variant="body1" color="text.secondary">
+                        このカテゴリにはスキルがまだ登録されていません。
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        onClick={() => handleOpenSkillDialog()}
+                        sx={{ mt: 2 }}
+                      >
+                        スキルを追加
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Grid container spacing={3}>
+                      {getSkillsByCategory(selectedCategory.id).map((skill) => (
+                        <Grid item xs={12} sm={6} md={4} key={skill.id}>
+                          <Card 
+                            elevation={1} 
+                            sx={{ 
+                              height: '100%',
+                              borderRadius: 2,
+                              transition: 'all 0.3s ease',
+                              '&:hover': {
+                                transform: 'translateY(-5px)',
+                                boxShadow: 4
+                              }
+                            }}
+                          >
+                            <CardContent sx={{ p: 3 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                 <Box sx={{ 
-                                  mr: 1.5, 
+                                  mr: 2, 
                                   width: 40, 
                                   height: 40, 
                                   display: 'flex', 
                                   alignItems: 'center', 
                                   justifyContent: 'center',
                                   bgcolor: 'rgba(0,0,0,0.03)',
-                                  borderRadius: '12px',
-                                  p: 0.5
+                                  borderRadius: '12px'
                                 }}>
-                                  <IconDisplay iconId={skill.icon} size={32} />
+                                  {skill.icon_id && typeof skill.icon_id === 'string' ? (
+                                    <IconDisplay iconId={skill.icon_id} />
+                                  ) : (
+                                    <Typography variant="subtitle2" color="text.secondary">
+                                      {skill.name.substring(0, 1).toUpperCase()}
+                                    </Typography>
+                                  )}
                                 </Box>
-                              ) : (
-                                <Box 
+                                <Typography variant="h6" component="h3" fontWeight="bold">
+                                  {skill.name}
+                                </Typography>
+                              </Box>
+
+                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
+                                <Chip 
+                                  label={`Lv.${skill.level}`} 
+                                  size="small" 
+                                  color={skill.level >= 4 ? "primary" : "default"}
+                                />
+                                <Chip 
+                                  label={`${skill.experience_years}年`} 
+                                  size="small" 
+                                  color="secondary"
+                                />
+                                {skill.is_highlighted && (
+                                  <Chip 
+                                    icon={<StarIcon />} 
+                                    label="注目" 
+                                    size="small" 
+                                    color="warning"
+                                  />
+                                )}
+                              </Box>
+
+                              {skill.description && (
+                                <Typography 
+                                  variant="body2" 
+                                  color="text.secondary" 
                                   sx={{ 
-                                    width: 40, 
-                                    height: 40, 
-                                    mr: 1.5, 
-                                    bgcolor: 'grey.100', 
-                                    borderRadius: '12px', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center' 
+                                    mb: 2,
+                                    minHeight: '2.5rem',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden'
                                   }}
                                 >
-                                  <Typography variant="subtitle2" color="text.secondary">
-                                    {skill.name.substring(0, 1).toUpperCase()}
-                                  </Typography>
-                                </Box>
+                                  {skill.description}
+                                </Typography>
                               )}
-                              <Typography
-                                variant="subtitle1"
-                                component="div"
-                                sx={{
-                                  fontWeight: 'medium',
-                                  color: skill.is_highlighted ? 'warning.dark' : 'text.primary',
-                                  lineHeight: 1.2
-                                }}
-                              >
-                                {skill.name}
-                                {skill.is_highlighted && (
-                                  <Tooltip title="ポートフォリオで強調表示されます">
-                                    <StarIcon 
-                                      fontSize="small" 
-                                      color="warning" 
-                                      sx={{ ml: 0.5, verticalAlign: 'middle', fontSize: '0.9rem' }} 
-                                    />
-                                  </Tooltip>
-                                )}
-                              </Typography>
-                            </Box>
-                            
-                            <Box sx={{ 
-                              mb: 2,
-                              display: 'flex',
-                              alignItems: 'center',
-                              flexWrap: 'wrap',
-                              gap: 1
-                            }}>
-                              <Box sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                bgcolor: skill.level >= 4 
-                                  ? alpha(theme.palette.primary.main, 0.08)
-                                  : alpha(theme.palette.grey[500], 0.08),
-                                color: skill.level >= 4 ? theme.palette.primary.main : theme.palette.text.secondary,
-                                borderRadius: 10,
-                                px: 1.5,
-                                py: 0.5,
+
+                              <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'flex-end', 
+                                mt: 'auto', 
+                                pt: 2,
+                                borderTop: '1px solid rgba(0,0,0,0.08)'
                               }}>
-                                {/* レベル表示をよりグラフィカルに */}
-                                {[...Array(5)].map((_, i) => (
-                                  <StarIcon 
-                                    key={i} 
-                                    sx={{ 
-                                      fontSize: '0.75rem', 
-                                      mx: '1px',
-                                      color: i < skill.level 
-                                        ? (skill.level >= 4 ? 'primary.main' : 'text.secondary') 
-                                        : 'action.disabled',
-                                    }} 
-                                  />
-                                ))}
-                              </Box>
-                              
-                              <Box sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                bgcolor: alpha(theme.palette.secondary.main, 0.08),
-                                color: theme.palette.secondary.main,
-                                borderRadius: 10,
-                                px: 1.5,
-                                py: 0.5,
-                                fontWeight: 'medium',
-                                fontSize: '0.75rem',
-                              }}>
-                                {skill.experience_years}年
-                              </Box>
-                            </Box>
-                            
-                            {skill.description && (
-                              <Typography 
-                                variant="body2" 
-                                color="text.secondary" 
-                                sx={{ 
-                                  mb: 2,
-                                  fontSize: '0.85rem',
-                                  lineHeight: 1.5,
-                                  height: '2.6rem',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: 'vertical',
-                                }}
-                              >
-                                {skill.description}
-                              </Typography>
-                            )}
-                            
-                            <Box sx={{ 
-                              display: 'flex', 
-                              justifyContent: 'flex-end', 
-                              mt: 'auto', 
-                              pt: 1,
-                              borderTop: '1px solid rgba(0,0,0,0.05)'
-                            }}>
-                              <Tooltip title="編集">
                                 <IconButton 
                                   size="small" 
-                                  onClick={() => handleOpenDialog(skill)}
+                                  onClick={() => handleOpenSkillDialog(skill)}
                                   sx={{ 
-                                    mr: 1, 
-                                    color: 'primary.main',
-                                    bgcolor: 'transparent',
+                                    mr: 1,
+                                    color: theme.palette.primary.main,
+                                    bgcolor: alpha(theme.palette.primary.main, 0.1),
                                     '&:hover': {
-                                      bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                      bgcolor: alpha(theme.palette.primary.main, 0.2),
                                     }
                                   }}
                                 >
                                   <EditIcon fontSize="small" />
                                 </IconButton>
-                              </Tooltip>
-                              <Tooltip title="削除">
                                 <IconButton 
                                   size="small" 
-                                  color="error" 
-                                  onClick={() => openDeleteConfirm(skill)}
+                                  onClick={() => handleOpenDeleteConfirm(skill)}
                                   sx={{ 
-                                    bgcolor: 'transparent',
+                                    color: theme.palette.error.main,
+                                    bgcolor: alpha(theme.palette.error.main, 0.1),
                                     '&:hover': {
-                                      bgcolor: alpha(theme.palette.error.main, 0.08),
+                                      bgcolor: alpha(theme.palette.error.main, 0.2),
                                     }
                                   }}
                                 >
                                   <DeleteIcon fontSize="small" />
                                 </IconButton>
-                              </Tooltip>
-                            </Box>
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                    ))}
-                  </Grid>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  )}
+                </Box>
+              )}
+            </>
+          )}
+        </Paper>
       )}
 
       {/* スキル編集ダイアログ */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={skillDialogOpen} 
+        onClose={handleCloseSkillDialog}
+        maxWidth="md"
+        fullWidth
+      >
         <DialogTitle>
-          {editingSkill?.id ? 'スキルを編集' : '新しいスキルを追加'}
+          {isEditMode ? 'スキルを編集' : '新しいスキルを追加'}
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 label="スキル名"
                 fullWidth
-                value={editingSkill?.name || ''}
-                onChange={(e) => handleDialogChange('name', e.target.value)}
-                error={!!validationErrors.name}
-                helperText={validationErrors.name}
+                value={currentSkill.name || ''}
+                onChange={e => setCurrentSkill({...currentSkill, name: e.target.value})}
                 required
                 margin="normal"
               />
             </Grid>
-            
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth margin="normal" error={!!validationErrors.category}>
-                <InputLabel id="category-label">カテゴリー</InputLabel>
+              <FormControl fullWidth margin="normal" required>
+                <InputLabel id="category-label">カテゴリ</InputLabel>
                 <Select
                   labelId="category-label"
-                  value={editingSkill?.category || ''}
-                  onChange={(e: SelectChangeEvent<number>) => handleDialogChange('category', e.target.value)}
-                  label="カテゴリー"
-                  required
+                  value={currentSkill.category || ''}
+                  onChange={e => setCurrentSkill({...currentSkill, category: e.target.value as number})}
+                  label="カテゴリ"
                 >
-                  {categories.map(category => (
+                  {skillCategories.map(category => (
                     <MenuItem key={category.id} value={category.id}>
                       {category.name}
                     </MenuItem>
                   ))}
                 </Select>
-                {validationErrors.category && (
-                  <FormHelperText>{validationErrors.category}</FormHelperText>
-                )}
               </FormControl>
             </Grid>
-            
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth margin="normal" error={!!validationErrors.level}>
+              <FormControl fullWidth margin="normal" required>
                 <InputLabel id="level-label">レベル</InputLabel>
                 <Select
                   labelId="level-label"
-                  value={editingSkill?.level || ''}
-                  onChange={(e: SelectChangeEvent<number>) => handleDialogChange('level', e.target.value)}
+                  value={currentSkill.level || 3}
+                  onChange={e => setCurrentSkill({...currentSkill, level: e.target.value as number})}
                   label="レベル"
-                  required
                 >
                   {[1, 2, 3, 4, 5].map(level => (
                     <MenuItem key={level} value={level}>
@@ -1366,150 +994,129 @@ const SkillsEdit: React.FC = () => {
                     </MenuItem>
                   ))}
                 </Select>
-                {validationErrors.level && (
-                  <FormHelperText>{validationErrors.level}</FormHelperText>
-                )}
               </FormControl>
             </Grid>
-            
             <Grid item xs={12} sm={6}>
               <TextField
                 label="経験年数"
                 type="number"
                 fullWidth
-                value={editingSkill?.experience_years || 0}
-                onChange={(e) => handleDialogChange('experience_years', parseFloat(e.target.value))}
+                value={currentSkill.experience_years || 0}
+                onChange={e => setCurrentSkill({...currentSkill, experience_years: parseFloat(e.target.value)})}
                 InputProps={{ inputProps: { min: 0, step: 0.5 } }}
-                error={!!validationErrors.experience_years}
-                helperText={validationErrors.experience_years}
                 margin="normal"
                 required
               />
             </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ mt: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="body1" sx={{ mr: 2 }}>アイコン</Typography>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<EmojiSymbolsIcon />}
-                    onClick={handleOpenIconSelect}
-                    color={validationErrors.icon ? "error" : "primary"}
-                  >
-                    アイコンを選択
-                  </Button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    style={{ display: 'none' }}
-                    accept="image/*"
-                    onChange={handleIconChange}
-                  />
-                </Box>
-                {validationErrors.icon && (
-                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-                    {validationErrors.icon}
-                  </Typography>
-                )}
-                {editingSkill?.icon ? (
-                  <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
-                    <Box sx={{ 
-                      width: 40, 
-                      height: 40, 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      border: '1px solid #eee',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        borderColor: 'primary.main',
-                        transform: 'scale(1.1)',
-                      },
-                    }}
-                    onClick={handleOpenIconSelect}
-                    >
-                      <IconDisplay iconId={editingSkill.icon} />
-                    </Box>
-                    <Typography variant="caption" sx={{ ml: 1 }}>
-                      {AVAILABLE_ICONS.find(i => i.id === editingSkill.icon)?.label || editingSkill.icon}
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                <Typography variant="body1">アイコン</Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<EmojiSymbolsIcon />}
+                  onClick={handleOpenIconDialog}
+                >
+                  アイコンを選択
+                </Button>
+              </Box>
+              {currentSkill.icon && (
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1.5, 
+                  p: 2, 
+                  border: '1px solid', 
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  bgcolor: 'background.paper',
+                  mb: 2
+                }}>
+                  <Box sx={{ 
+                    width: 48, 
+                    height: 48, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center'
+                  }}>
+                    <IconDisplay iconId={currentSkill.icon} />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1">
+                      {AVAILABLE_ICONS.find(i => i.id === currentSkill.icon)?.label || currentSkill.icon}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      アイコンID: {currentSkill.icon}
                     </Typography>
                   </Box>
-                ) : (
-                  <Typography variant="caption" color={validationErrors.icon ? "error" : "text.secondary"} sx={{ mt: 1, display: 'block' }}>
-                    アイコンが設定されていません。「アイコンを選択」ボタンをクリックして選んでください。
-                  </Typography>
-                )}
-              </Box>
+                </Box>
+              )}
             </Grid>
-            
             <Grid item xs={12}>
               <TextField
                 label="説明"
                 fullWidth
                 multiline
                 rows={3}
-                value={editingSkill?.description || ''}
-                onChange={(e) => handleDialogChange('description', e.target.value)}
+                value={currentSkill.description || ''}
+                onChange={e => setCurrentSkill({...currentSkill, description: e.target.value})}
                 margin="normal"
                 placeholder="このスキルについての詳細や得意な分野などを記入してください"
               />
             </Grid>
-            
             <Grid item xs={12}>
               <FormControlLabel
                 control={
                   <Checkbox 
-                    checked={editingSkill?.is_highlighted || false}
-                    onChange={(e) => handleDialogChange('is_highlighted', e.target.checked)}
+                    checked={currentSkill.is_highlighted || false}
+                    onChange={e => setCurrentSkill({...currentSkill, is_highlighted: e.target.checked})}
                     color="warning"
-                    icon={<StarIcon />}
-                    checkedIcon={<StarIcon />}
                   />
                 }
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography variant="body2" fontWeight="medium">ポートフォリオで強調表示する</Typography>
-                    <Tooltip title="チェックすると、ポートフォリオ画面でこのスキルが目立つように表示されます。特にアピールしたいスキルに設定してください。">
-                      <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>(アピールポイントとして表示)</Typography>
-                    </Tooltip>
-                  </Box>
-                }
+                label="ポートフォリオで強調表示する（特にアピールしたいスキル）"
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>キャンセル</Button>
+          <Button onClick={handleCloseSkillDialog}>キャンセル</Button>
           <Button 
             variant="contained" 
             color="primary" 
             onClick={handleSaveSkill}
-            disabled={saving}
+            disabled={savingSkill}
+            startIcon={savingSkill ? <CircularProgress size={16} /> : <SaveIcon />}
           >
-            {saving ? <CircularProgress size={24} /> : '保存'}
+            保存
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* アイコン選択ダイアログ */}
-      <Dialog
-        open={iconSelectOpen}
-        onClose={handleCloseIconSelect}
-        maxWidth="md"
+      <Dialog 
+        open={iconDialogOpen} 
+        onClose={handleCloseIconDialog}
         fullWidth
+        maxWidth="md"
+        keepMounted={false}
       >
-        <DialogTitle>アイコンを選択</DialogTitle>
+        <DialogTitle>
+          アイコンを選択
+          <IconButton 
+            onClick={handleCloseIconDialog}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent dividers>
           <Box sx={{ mb: 2 }}>
             <TextField
+              label="アイコン検索"
               fullWidth
-              placeholder="アイコンを検索..."
-              value={iconSearchTerm}
-              onChange={(e) => setIconSearchTerm(e.target.value)}
+              variant="outlined"
+              value={iconSearchQuery}
+              onChange={e => setIconSearchQuery(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -1519,89 +1126,96 @@ const SkillsEdit: React.FC = () => {
               }}
             />
           </Box>
-          
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs 
-              value={iconTabValue} 
-              onChange={handleIconTabChange}
-              variant="scrollable"
-              scrollButtons="auto"
-            >
-              <Tab label="すべて" />
-              {ICON_CATEGORIES.map((category, index) => (
-                <Tab key={category} label={category} />
-              ))}
-            </Tabs>
-          </Box>
-          
-          <Box sx={{ mt: 2, maxHeight: '400px', overflow: 'auto' }}>
-            <Grid container spacing={1}>
-              {getFilteredIcons().map((icon) => (
-                <Grid item xs={4} sm={3} md={2} key={icon.id}>
-                  <Box
-                    sx={{
-                      p: 1.5,
-                      display: 'flex',
+
+          <Tabs
+            value={selectedIconCategory}
+            onChange={(_, newValue) => setSelectedIconCategory(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
+          >
+            <Tab label="すべて" value="all" />
+            {ICON_CATEGORIES.map(category => (
+              <Tab key={category} label={category} value={category} />
+            ))}
+          </Tabs>
+
+          <Grid container spacing={1}>
+            {filteredIcons
+              .filter(icon => 
+                iconSearchQuery ? 
+                  icon.label.toLowerCase().includes(iconSearchQuery.toLowerCase()) || 
+                  icon.id.toLowerCase().includes(iconSearchQuery.toLowerCase()) 
+                : true
+              )
+              .map(icon => (
+                <Grid item key={icon.id}>
+                  <Card 
+                    sx={{ 
+                      width: 85, 
+                      height: 85, 
+                      display: 'flex', 
                       flexDirection: 'column',
                       alignItems: 'center',
-                      border: '1px solid',
-                      borderColor: selectedIconId === icon.id ? 'primary.main' : 'divider',
-                      borderRadius: 1,
+                      justifyContent: 'center',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
-                      backgroundColor: selectedIconId === icon.id ? 'primary.light' : 'background.paper',
                       '&:hover': {
-                        borderColor: 'primary.main',
-                        backgroundColor: 'action.hover',
                         transform: 'translateY(-2px)',
+                        boxShadow: 3,
+                        bgcolor: alpha(theme.palette.primary.main, 0.1)
                       },
+                      ...(selectedIconId === icon.id ? {
+                        bgcolor: alpha(theme.palette.primary.main, 0.2),
+                        border: `1px solid ${theme.palette.primary.main}`,
+                      } : {})
                     }}
                     onClick={() => handleSelectIcon(icon.id)}
                   >
-                    <GridIconDisplay iconId={icon.id} />
-                    <Typography 
-                      variant="caption" 
-                      align="center" 
-                      sx={{ 
-                        mt: 1, 
-                        fontSize: '0.7rem', 
-                        color: selectedIconId === icon.id ? 'primary.main' : 'text.primary',
-                        fontWeight: selectedIconId === icon.id ? 'bold' : 'normal'
-                      }}
-                    >
+                    <Box sx={{ p: 1, height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <GridIconDisplay iconId={icon.id} />
+                    </Box>
+                    <Typography variant="caption" sx={{ textAlign: 'center', px: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
                       {icon.label}
                     </Typography>
-                  </Box>
+                  </Card>
                 </Grid>
               ))}
-              
-              {getFilteredIcons().length === 0 && (
-                <Grid item xs={12}>
-                  <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
-                    該当するアイコンが見つかりませんでした
-                  </Typography>
-                </Grid>
-              )}
-            </Grid>
-          </Box>
+          </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseIconSelect}>キャンセル</Button>
+          <Button onClick={handleCloseIconDialog}>キャンセル</Button>
+          <Button 
+            onClick={() => {
+              if (selectedIconId) {
+                handleSelectIcon(selectedIconId);
+              } else {
+                console.log('アイコンが選択されていません');
+              }
+            }}
+            color="primary"
+            variant="contained"
+            disabled={!selectedIconId}
+          >
+            選択
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* カテゴリ作成ダイアログ */}
-      <Dialog open={categoryDialogOpen} onClose={handleCloseCategoryDialog} maxWidth="xs" fullWidth>
+      <Dialog 
+        open={categoryDialogOpen} 
+        onClose={handleCloseCategoryDialog}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle>新しいカテゴリを追加</DialogTitle>
         <DialogContent dividers>
-          {categoryError && (
-            <Alert severity="error" sx={{ mb: 2 }}>{categoryError}</Alert>
-          )}
           <TextField
             label="カテゴリ名"
             fullWidth
-            value={newCategory.name}
-            onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+            value={newCategory.name || ''}
+            onChange={e => setNewCategory({...newCategory, name: e.target.value})}
             required
             margin="normal"
           />
@@ -1609,8 +1223,8 @@ const SkillsEdit: React.FC = () => {
             label="表示順序"
             type="number"
             fullWidth
-            value={newCategory.order}
-            onChange={(e) => setNewCategory({...newCategory, order: parseInt(e.target.value)})}
+            value={newCategory.order || skillCategories.length + 1}
+            onChange={e => setNewCategory({...newCategory, order: parseInt(e.target.value)})}
             InputProps={{ inputProps: { min: 1 } }}
             margin="normal"
           />
@@ -1622,14 +1236,18 @@ const SkillsEdit: React.FC = () => {
             color="primary" 
             onClick={handleCreateCategory}
             disabled={savingCategory}
+            startIcon={savingCategory ? <CircularProgress size={16} /> : <SaveIcon />}
           >
-            {savingCategory ? <CircularProgress size={24} /> : '作成'}
+            作成
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* 削除確認ダイアログ */}
-      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+      <Dialog 
+        open={deleteConfirmOpen} 
+        onClose={() => setDeleteConfirmOpen(false)}
+      >
         <DialogTitle>スキルの削除</DialogTitle>
         <DialogContent>
           <Typography>
@@ -1638,7 +1256,14 @@ const SkillsEdit: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteConfirmOpen(false)}>キャンセル</Button>
-          <Button variant="contained" color="error" onClick={handleDeleteSkill}>削除</Button>
+          <Button 
+            variant="contained" 
+            color="error" 
+            onClick={handleDeleteSkill}
+            startIcon={<DeleteIcon />}
+          >
+            削除
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

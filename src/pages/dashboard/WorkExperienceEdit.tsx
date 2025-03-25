@@ -253,6 +253,11 @@ const formatWorkExperienceData = (data: Partial<WorkExperience>): Partial<WorkEx
   // 現在の案件の場合は終了日をnullに設定
   const formattedData = {
     ...data,
+    // 必須フィールドの初期値を設定
+    position: data.position || '',
+    description: data.details?.project_detail || '',
+    // 日付フィールドの処理
+    start_date: data.start_date,
     end_date: data.current ? null : data.end_date,
     // details オブジェクトが存在しない場合は作成
     details: data.details || {
@@ -389,6 +394,15 @@ const WorkExperienceDialog: React.FC<{
       newErrors.project_detail = '案件詳細は必須です';
     }
 
+    // 日付の妥当性チェック
+    if (formData.start_date && formData.end_date && !formData.current) {
+      const start = new Date(formData.start_date);
+      const end = new Date(formData.end_date);
+      if (start > end) {
+        newErrors.end_date = '終了日は開始日より後の日付を指定してください';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -398,6 +412,16 @@ const WorkExperienceDialog: React.FC<{
       const finalData = formatWorkExperienceData(formData);
       onSave(finalData);
     }
+  };
+
+  // 日付入力フィールドのonChange処理
+  const handleDateChange = (name: string, value: string) => {
+    // value は 'YYYY-MM' 形式
+    const formattedValue = value ? `${value}-01` : ''; // 月初日を設定
+    setFormData(prev => ({
+      ...prev,
+      [name]: formattedValue
+    }));
   };
 
   return (
@@ -442,13 +466,13 @@ const WorkExperienceDialog: React.FC<{
             <TextField
               label="開始日"
               name="start_date"
-              type="date"
-              value={formData.start_date || ''}
-              onChange={handleChange}
+              type="month"
+              value={formData.start_date ? formData.start_date.substring(0, 7) : ''}
+              onChange={(e) => handleDateChange('start_date', e.target.value)}
               fullWidth
               required
               error={!!errors.start_date}
-              helperText={errors.start_date || 'YYYY-MM-DD形式で入力'}
+              helperText={errors.start_date || '年月を選択'}
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
@@ -457,13 +481,13 @@ const WorkExperienceDialog: React.FC<{
             <TextField
               label="終了日"
               name="end_date"
-              type="date"
-              value={formData.end_date || ''}
-              onChange={handleChange}
+              type="month"
+              value={formData.end_date ? formData.end_date.substring(0, 7) : ''}
+              onChange={(e) => handleDateChange('end_date', e.target.value)}
               fullWidth
               disabled={formData.current}
               error={!!errors.end_date && !formData.current}
-              helperText={errors.end_date || 'YYYY-MM-DD形式で入力'}
+              helperText={errors.end_date || '年月を選択'}
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
@@ -604,6 +628,30 @@ const WorkExperienceDialog: React.FC<{
   );
 };
 
+// 在籍期間を計算する関数
+const calculateDuration = (workExperience: WorkExperience): string => {
+  const startDate = new Date(workExperience.start_date);
+  const endDate = workExperience.current ? new Date() : 
+                 (workExperience.end_date ? new Date(workExperience.end_date) : new Date());
+  
+  // 月数の差を計算
+  let months = (endDate.getFullYear() - startDate.getFullYear()) * 12;
+  months += endDate.getMonth() - startDate.getMonth();
+  
+  // 年と月に変換
+  const years = Math.floor(months / 12);
+  const remainingMonths = months % 12;
+  
+  // 表示文字列を生成
+  if (years === 0) {
+    return `${remainingMonths}か月`;
+  } else if (remainingMonths === 0) {
+    return `${years}年`;
+  } else {
+    return `${years}年${remainingMonths}か月`;
+  }
+};
+
 // 職務経歴アイテム
 const WorkExperienceItem: React.FC<{
   workExperience: WorkExperience;
@@ -729,6 +777,20 @@ const WorkExperienceItem: React.FC<{
                 )}
               </Typography>
               
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: 'text.secondary',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                  gap: 0.5,
+                  mt: 0.5
+                }}
+              >
+                （{calculateDuration(workExperience)}）
+              </Typography>
+              
               {workExperience.team_size && (
                 <Typography 
                   variant="body2" 
@@ -737,7 +799,8 @@ const WorkExperienceItem: React.FC<{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: { xs: 'flex-start', sm: 'flex-end' },
-                    gap: 0.5
+                    gap: 0.5,
+                    mt: 0.5
                   }}
                 >
                   <GroupIcon fontSize="small" />

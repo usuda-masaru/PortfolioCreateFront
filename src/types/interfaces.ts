@@ -16,30 +16,15 @@ export interface SkillCategory {
 export interface Skill {
   id: number;
   name: string;
-  category: number;
+  category: number | null;
   category_name?: string;
   level: number;
   experience_years: number;
   icon?: string;
+  icon_id?: string;
   description?: string;
   order: number;
   is_highlighted?: boolean;
-}
-
-export interface Project {
-  id: number;
-  title: string;
-  description: string;
-  thumbnail?: string;
-  project_url?: string;
-  github_url?: string;
-  technologies: Skill[];
-  start_date?: string;
-  end_date?: string;
-  is_featured: boolean;
-  order: number;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface Education {
@@ -125,7 +110,6 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
   skills: Skill[];
-  projects: Project[];
   education: Education[];
   work_experiences: WorkExperience[];
   process_experiences?: ProcessExperience[];
@@ -139,6 +123,7 @@ export interface QiitaArticle {
   updated_at: string;
   likes_count: number;
   stocks_count: number;
+  page_views_count?: number;
   tags: string[];
   is_featured?: boolean;
 }
@@ -178,7 +163,6 @@ export interface PublicProfile {
   website_url?: string;
   resume?: string;
   skills: SkillCategory[];
-  projects: Project[];
   education: Education[];
   work_experiences: WorkExperience[];
   qiita_articles?: QiitaArticle[];

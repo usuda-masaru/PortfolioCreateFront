@@ -88,7 +88,7 @@ function App() {
             </Route>
             
             {/* 公開ポートフォリオルート */}
-            <Route path="/portfolio/:slug" element={<Portfolio />} />
+            <Route path="/portfolio/:portfolio_slug" element={<Portfolio />} />
             
             {/* リダイレクト */}
             <Route path="/" element={<Navigate to="/login" replace />} />

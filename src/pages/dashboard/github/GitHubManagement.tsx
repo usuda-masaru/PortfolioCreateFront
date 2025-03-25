@@ -4,7 +4,7 @@ import {
   Card, CardContent, CardActions, CardHeader, CardMedia,
   IconButton, Alert, CircularProgress, Link, Switch, 
   FormControlLabel, Tooltip, TextField, Dialog, DialogActions,
-  DialogContent, DialogContentText, DialogTitle
+  DialogContent, DialogContentText, DialogTitle, Grow
 } from '@mui/material';
 import { 
   Sync as SyncIcon,
@@ -17,10 +17,13 @@ import {
   Link as LinkIcon,
   Star as StarredIcon,
   StarBorder as UnstarredIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  CalendarToday as CalendarTodayIcon
 } from '@mui/icons-material';
 import { githubAPI, profileAPI } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
+import { alpha } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 
 interface GitHubRepository {
   id: number;
@@ -64,6 +67,7 @@ const GitHubManagement: React.FC = () => {
   const [savingSettings, setSavingSettings] = useState(false);
   const [profileId, setProfileId] = useState<number | null>(null);
   const { user } = useAuth();
+  const theme = useTheme();
   
   // 設定を読み込む
   const loadGitHubSettings = async () => {
@@ -291,237 +295,295 @@ const GitHubManagement: React.FC = () => {
   };
   
   return (
-    <Box sx={{ py: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          <GitHubIcon sx={{ mr: 1, verticalAlign: 'bottom' }} />
-          GitHub連携
-        </Typography>
-        
+    <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: 3, 
+          mb: 4, 
+          borderRadius: 2,
+          bgcolor: 'rgba(33, 150, 243, 0.06)',
+          color: 'primary.main',
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', md: 'center' },
+          gap: 2
+        }}
+      >
         <Box>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              mb: 1
+            }}
+          >
+            <GitHubIcon sx={{ mr: 1.5, fontSize: '1.75rem' }} />
+            GitHub連携設定
+          </Typography>
+          <Typography variant="body1" sx={{ opacity: 0.9 }}>
+            GitHubのリポジトリ情報をポートフォリオに表示して、あなたの開発実績をアピールできます。
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant="contained"
             color="primary"
             startIcon={<SyncIcon />}
             onClick={handleSyncRepositories}
             disabled={syncLoading}
-            sx={{ mr: 2 }}
+            sx={{ 
+              px: 3, 
+              py: 1,
+              borderRadius: 2,
+              boxShadow: 2,
+              fontWeight: 'bold'
+            }}
           >
             {syncLoading ? <CircularProgress size={24} color="inherit" /> : 'リポジトリを同期'}
           </Button>
-          
           <Button
             variant="outlined"
             color="primary"
-            startIcon={<GitHubIcon />}
-            onClick={handleConnectGithub}
-            sx={{ mr: 2 }}
-          >
-            GitHubと連携
-          </Button>
-          
-          <Button
-            variant="outlined"
-            color="secondary"
             startIcon={<SettingsIcon />}
             onClick={handleOpenSettings}
+            sx={{ 
+              px: 3, 
+              py: 1,
+              borderRadius: 2,
+              fontWeight: 'bold'
+            }}
           >
             設定
           </Button>
         </Box>
-      </Box>
-      
+      </Paper>
+
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 3, whiteSpace: 'pre-line', borderRadius: 2 }}>
           {error}
         </Alert>
       )}
-      
+
       {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
+        <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
           {success}
         </Alert>
       )}
-      
-      <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <Typography variant="h5" gutterBottom sx={{ 
-          display: 'flex', 
-          alignItems: 'center',
-          color: 'primary.main',
-          fontWeight: 'medium',
-          mb: 2
-        }}>
-          <GitHubIcon sx={{ mr: 1.5 }} />
-          GitHub連携設定
-        </Typography>
-        
-        <Box sx={{ 
-          bgcolor: 'info.light', 
-          color: 'info.contrastText', 
-          p: 2, 
-          borderRadius: 1,
-          mb: 3,
-          display: 'flex',
-          alignItems: 'center'
-        }}>
-          <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-            GitHubのリポジトリ情報をポートフォリオに表示できます。以下の手順で設定してください。
-          </Typography>
-        </Box>
-        
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 3 }}>
-          <Paper elevation={1} sx={{ 
-            p: 2, 
-            flex: 1, 
-            borderTop: '4px solid #3f51b5', 
-            borderRadius: 1,
-            position: 'relative'
-          }}>
-            <Box sx={{ 
-              position: 'absolute', 
-              top: -12, 
-              left: 16, 
-              bgcolor: '#3f51b5', 
-              color: 'white',
-              width: 24,
-              height: 24,
-              borderRadius: '50%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              fontWeight: 'bold'
-            }}>1</Box>
-            <Typography variant="h6" sx={{ mb: 1.5, mt: 0.5 }}>
-              GitHubでOAuth Appを登録
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1.5 }}>
-              <Link 
-                href="https://github.com/settings/developers" 
-                target="_blank"
-                sx={{ fontWeight: 'medium' }}
-              >
-                GitHub Developer Settings
-              </Link>
-              で新しいOAuth Appを登録します：
-            </Typography>
-            <Box sx={{ 
-              bgcolor: '#f5f5f5', 
-              p: 1.5, 
-              borderRadius: 1,
-              '& li': {
-                mb: 0.5
-              }
-            }}>
-              <li>「New OAuth App」をクリック</li>
-              <li>Application name: 任意の名前</li>
-              <li>Homepage URL: <code>http://localhost:3000</code></li>
-              <li>Authorization callback URL: <code>http://localhost:8000/api/oauth/github/callback/</code></li>
-            </Box>
-          </Paper>
-          
-          <Paper elevation={1} sx={{ 
-            p: 2, 
-            flex: 1, 
-            borderTop: '4px solid #f50057',
-            borderRadius: 1,
-            position: 'relative'
-          }}>
-            <Box sx={{ 
-              position: 'absolute', 
-              top: -12, 
-              left: 16, 
-              bgcolor: '#f50057', 
-              color: 'white',
-              width: 24,
-              height: 24,
-              borderRadius: '50%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              fontWeight: 'bold'
-            }}>2</Box>
-            <Typography variant="h6" sx={{ mb: 1.5, mt: 0.5 }}>
-              Client情報を設定
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              OAuth AppページでClient IDとClient Secretを取得し、「設定」ボタンから入力します。
-            </Typography>
-            <Button
-              variant="outlined"
-              color="secondary"
-              size="small"
-              startIcon={<SettingsIcon />}
-              onClick={handleOpenSettings}
-              sx={{ mt: 1 }}
-            >
-              設定
-            </Button>
-          </Paper>
-          
-          <Paper elevation={1} sx={{ 
-            p: 2, 
-            flex: 1, 
-            borderTop: '4px solid #4caf50',
-            borderRadius: 1,
-            position: 'relative'
-          }}>
-            <Box sx={{ 
-              position: 'absolute', 
-              top: -12, 
-              left: 16, 
-              bgcolor: '#4caf50', 
-              color: 'white',
-              width: 24,
-              height: 24,
-              borderRadius: '50%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              fontWeight: 'bold'
-            }}>3</Box>
-            <Typography variant="h6" sx={{ mb: 1.5, mt: 0.5 }}>
-              連携と同期
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              GitHub連携ボタンをクリックしてアカウントを連携した後、リポジトリを同期します。
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<GitHubIcon />}
-                onClick={handleConnectGithub}
-              >
-                GitHubと連携
-              </Button>
-              <Button
-                variant="contained"
-                size="small"
-                color="primary"
-                startIcon={<SyncIcon />}
-                onClick={handleSyncRepositories}
-                disabled={syncLoading}
-              >
-                リポジトリを同期
-              </Button>
-            </Box>
-          </Paper>
-        </Box>
-        
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <FormControlLabel
-            control={
-              <Switch 
-                checked={showPrivate} 
-                onChange={e => setShowPrivate(e.target.checked)} 
-                color="primary"
-              />
-            }
-            label="プライベートリポジトリも表示する"
+
+      <Grow in={true} timeout={500}>
+        <Paper 
+          elevation={2}
+          sx={{ 
+            mb: 4,
+            borderRadius: 2,
+            overflow: 'hidden'
+          }}
+        >
+          <Box 
+            sx={{ 
+              p: 0.5, 
+              bgcolor: theme.palette.primary.main
+            }}
           />
-        </Box>
-      </Paper>
-      
+          
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom fontWeight="medium">
+              GitHub連携手順
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              以下の手順でGitHubリポジトリをポートフォリオに表示できます。
+            </Typography>
+
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={4}>
+                <Paper 
+                  elevation={1} 
+                  sx={{ 
+                    p: 3,
+                    height: '100%',
+                    borderRadius: 2,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                    bgcolor: alpha(theme.palette.background.paper, 0.98),
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: 4
+                    }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: theme.palette.primary.main,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                        mr: 2
+                      }}
+                    >
+                      1
+                    </Box>
+                    <Typography variant="h6" fontWeight="medium">
+                      OAuth App作成
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                    GitHubのDeveloper settingsでOAuth Appを作成し、Client IDとClient Secretを取得します。
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    href="https://github.com/settings/developers"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    startIcon={<GitHubIcon />}
+                  >
+                    OAuth App作成
+                  </Button>
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <Paper 
+                  elevation={1} 
+                  sx={{ 
+                    p: 3,
+                    height: '100%',
+                    borderRadius: 2,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                    bgcolor: alpha(theme.palette.background.paper, 0.98),
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: 4
+                    }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: theme.palette.primary.main,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                        mr: 2
+                      }}
+                    >
+                      2
+                    </Box>
+                    <Typography variant="h6" fontWeight="medium">
+                      Client情報設定
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                    取得したClient IDとClient Secretを設定画面で入力します。
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<SettingsIcon />}
+                    onClick={handleOpenSettings}
+                  >
+                    設定画面を開く
+                  </Button>
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <Paper 
+                  elevation={1} 
+                  sx={{ 
+                    p: 3,
+                    height: '100%',
+                    borderRadius: 2,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                    bgcolor: alpha(theme.palette.background.paper, 0.98),
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: 4
+                    }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: theme.palette.primary.main,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                        mr: 2
+                      }}
+                    >
+                      3
+                    </Box>
+                    <Typography variant="h6" fontWeight="medium">
+                      連携と同期
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                    GitHubアカウントと連携し、リポジトリ情報を同期します。
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<GitHubIcon />}
+                      onClick={handleConnectGithub}
+                    >
+                      GitHubと連携
+                    </Button>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<SyncIcon />}
+                      onClick={handleSyncRepositories}
+                      disabled={syncLoading}
+                    >
+                      同期
+                    </Button>
+                  </Box>
+                </Paper>
+              </Grid>
+            </Grid>
+
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+              <FormControlLabel
+                control={
+                  <Switch 
+                    checked={showPrivate} 
+                    onChange={e => setShowPrivate(e.target.checked)} 
+                    color="primary"
+                  />
+                }
+                label="プライベートリポジトリも表示する"
+              />
+            </Box>
+          </Box>
+        </Paper>
+      </Grow>
+
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
@@ -530,173 +592,254 @@ const GitHubManagement: React.FC = () => {
         <Paper sx={{ p: 3, borderRadius: 2, mb: 3 }}>
           <Box sx={{ 
             display: 'flex', 
-            alignItems: 'center', 
-            mb: 3,
-            pb: 2,
-            borderBottom: '1px solid',
-            borderColor: 'divider'
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 3
           }}>
-            <GitHubIcon sx={{ mr: 2, fontSize: 28, color: 'primary.main' }} />
-            <Typography variant="h5" fontWeight="medium" color="primary.main">
-              リポジトリ一覧 
-              <Box component="span" sx={{ ml: 1, color: 'text.secondary', fontSize: '0.8em' }}>
-                ({repositories.length}件)
-              </Box>
+            <Typography variant="h5" component="h2" fontWeight="bold">
+              リポジトリ一覧
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary">
+              ⭐ アイコンをクリックすると、リポジトリをポートフォリオで特集として表示できます。
             </Typography>
           </Box>
-          
+
           <Grid container spacing={3}>
             {repositories.map(repo => (
-              <Grid item xs={12} md={6} lg={4} key={repo.id}>
+              <Grid item xs={12} key={repo.id}>
                 <Card 
-                  elevation={2}
+                  elevation={2} 
                   sx={{ 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    transition: '0.3s',
-                    borderLeft: repo.featured ? `4px solid #f50057` : 'none',
+                    mb: 0,
+                    borderRadius: 2,
+                    overflow: 'visible',
+                    transition: 'all 0.3s ease',
                     '&:hover': {
-                      boxShadow: 6,
+                      transform: 'translateY(-2px)',
+                      boxShadow: 4
                     }
                   }}
                 >
-                  <CardHeader
-                    title={
-                      <Typography variant="h6" noWrap title={repo.name}>
-                        {repo.name}
-                      </Typography>
-                    }
-                    subheader={
-                      <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                        {repo.language && (
-                          <Chip 
-                            size="small" 
-                            label={repo.language}
+                  <CardContent sx={{ p: 3 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={8}>
+                        <Typography 
+                          variant="h6" 
+                          component="h3" 
+                          sx={{ 
+                            fontWeight: 'bold',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1
+                          }}
+                        >
+                          <GitHubIcon color="primary" />
+                          {repo.name}
+                        </Typography>
+                        
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary" 
+                          sx={{ mt: 1, mb: 2 }}
+                        >
+                          {repo.description || '説明なし'}
+                        </Typography>
+
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {repo.language && (
+                            <Chip 
+                              label={repo.language}
+                              size="small"
+                              sx={{ 
+                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                color: theme.palette.primary.main,
+                                fontWeight: 'medium',
+                                fontSize: '0.75rem',
+                              }}
+                            />
+                          )}
+                          
+                          {repo.is_private && (
+                            <Chip 
+                              label="Private"
+                              size="small"
+                              sx={{ 
+                                bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                color: theme.palette.warning.main,
+                                fontWeight: 'medium',
+                                fontSize: '0.75rem',
+                              }}
+                            />
+                          )}
+                          
+                          {repo.is_fork && (
+                            <Chip 
+                              label="Fork"
+                              size="small"
+                              sx={{ 
+                                bgcolor: alpha(theme.palette.info.main, 0.1),
+                                color: theme.palette.info.main,
+                                fontWeight: 'medium',
+                                fontSize: '0.75rem',
+                              }}
+                            />
+                          )}
+                        </Box>
+
+                        {repo.topics.length > 0 && (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                            {repo.topics.map(topic => (
+                              <Chip
+                                key={topic}
+                                label={topic}
+                                size="small"
+                                variant="outlined"
+                                sx={{ 
+                                  bgcolor: alpha(theme.palette.success.main, 0.1),
+                                  color: theme.palette.success.main,
+                                  fontWeight: 'medium',
+                                  fontSize: '0.75rem',
+                                }}
+                              />
+                            ))}
+                          </Box>
+                        )}
+                      </Grid>
+                      
+                      <Grid item xs={12} sm={4}>
+                        <Box 
+                          sx={{ 
+                            display: 'flex',
+                            justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                            alignItems: 'flex-start',
+                            gap: 1,
+                            height: '100%',
+                            flexDirection: 'column',
+                            textAlign: { xs: 'left', sm: 'right' },
+                          }}
+                        >
+                          <Typography 
+                            variant="body2" 
                             sx={{ 
-                              mr: 1,
-                              backgroundColor: getLanguageColor(repo.language),
-                              color: '#fff',
-                              fontWeight: 'medium',
+                              color: 'text.secondary',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                              gap: 0.5
                             }}
-                          />
-                        )}
-                        
-                        {repo.is_private && (
-                          <Chip size="small" label="Private" sx={{ mr: 1 }} />
-                        )}
-                        
-                        {repo.is_fork && (
-                          <Chip size="small" label="Fork" color="default" variant="outlined" />
-                        )}
-                      </Box>
-                    }
-                    action={
-                      <IconButton
-                        onClick={() => handleToggleFeatured(repo.id)}
-                        title={repo.featured ? 'ポートフォリオから外す' : 'ポートフォリオに追加'}
-                      >
-                        {repo.featured ? 
-                          <StarredIcon sx={{ color: '#f50057' }} /> : 
-                          <UnstarredIcon />
-                        }
-                      </IconButton>
-                    }
-                  />
-                  
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      {repo.description || '説明なし'}
-                    </Typography>
-                    
-                    {repo.topics.length > 0 && (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-                        {repo.topics.map(topic => (
-                          <Chip
-                            key={topic}
-                            label={topic}
+                          >
+                            <CalendarTodayIcon fontSize="small" />
+                            {new Date(repo.pushed_at).toLocaleDateString()}
+                          </Typography>
+                          
+                          <Box sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
+                            <Tooltip title="スター数">
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <StarIcon fontSize="small" sx={{ mr: 0.5, color: theme.palette.warning.main }} />
+                                <Typography variant="body2" color="text.secondary">
+                                  {repo.stargazers_count}
+                                </Typography>
+                              </Box>
+                            </Tooltip>
+                            
+                            <Tooltip title="フォーク数">
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <ForkIcon fontSize="small" sx={{ mr: 0.5, color: theme.palette.info.main }} />
+                                <Typography variant="body2" color="text.secondary">
+                                  {repo.forks_count}
+                                </Typography>
+                              </Box>
+                            </Tooltip>
+                            
+                            <Tooltip title="Issue数">
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <IssueIcon fontSize="small" sx={{ mr: 0.5, color: theme.palette.success.main }} />
+                                <Typography variant="body2" color="text.secondary">
+                                  {repo.open_issues_count}
+                                </Typography>
+                              </Box>
+                            </Tooltip>
+                          </Box>
+                        </Box>
+                      </Grid>
+                      
+                      <Grid item xs={12}>
+                        <Box 
+                          sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            mt: 2,
+                            pt: 2,
+                            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+                          }}
+                        >
+                          <Button
+                            startIcon={<GitHubIcon />}
+                            href={repo.html_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             size="small"
-                            variant="outlined"
-                            sx={{ mr: 0.5, mb: 0.5 }}
-                          />
-                        ))}
-                      </Box>
-                    )}
-                    
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Tooltip title="スター数">
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <StarIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="text.secondary">
-                            {repo.stargazers_count}
-                          </Typography>
+                          >
+                            GitHubで表示
+                          </Button>
+                          
+                          <Box>
+                            <Tooltip title={repo.featured ? "ポートフォリオから外す" : "ポートフォリオに追加"}>
+                              <IconButton 
+                                size="small" 
+                                color={repo.featured ? "primary" : "default"}
+                                onClick={() => handleToggleFeatured(repo.id)}
+                                sx={{ 
+                                  transition: 'all 0.2s ease',
+                                  '&:hover': {
+                                    transform: 'scale(1.1)',
+                                    bgcolor: alpha(theme.palette.primary.main, 0.1)
+                                  }
+                                }}
+                              >
+                                {repo.featured ? <StarredIcon /> : <UnstarredIcon />}
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
                         </Box>
-                      </Tooltip>
-                      
-                      <Tooltip title="フォーク数">
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <ForkIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="text.secondary">
-                            {repo.forks_count}
-                          </Typography>
-                        </Box>
-                      </Tooltip>
-                      
-                      <Tooltip title="Issue数">
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <IssueIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="text.secondary">
-                            {repo.open_issues_count}
-                          </Typography>
-                        </Box>
-                      </Tooltip>
-                    </Box>
+                      </Grid>
+                    </Grid>
                   </CardContent>
-                  
-                  <Divider />
-                  
-                  <CardActions>
-                    <Button
-                      startIcon={<GitHubIcon />}
-                      href={repo.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      size="small"
-                    >
-                      GitHubで表示
-                    </Button>
-                    
-                    <Box sx={{ flexGrow: 1 }} />
-                    
-                    <Tooltip title="最終更新日">
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(repo.pushed_at).toLocaleDateString()}
-                      </Typography>
-                    </Tooltip>
-                  </CardActions>
                 </Card>
               </Grid>
             ))}
           </Grid>
         </Paper>
       ) : (
-        <Box sx={{ textAlign: 'center', my: 4, p: 3, bgcolor: '#f5f5f5', borderRadius: 2 }}>
-          <GitHubIcon sx={{ fontSize: 60, color: '#9e9e9e', mb: 2 }} />
-          <Typography variant="h6" gutterBottom>
-            リポジトリがありません
+        <Paper 
+          sx={{ 
+            p: 4, 
+            textAlign: 'center',
+            borderRadius: 2,
+            bgcolor: 'grey.50',
+            border: '1px dashed',
+            borderColor: 'grey.300'
+          }}
+        >
+          <GitHubIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
+          <Typography variant="h6" sx={{ mb: 1, fontWeight: 'medium' }}>
+            リポジトリがまだ同期されていません
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            GitHubと連携して、リポジトリ情報を同期してください。
+          <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+            GitHubと連携してリポジトリを同期すると、ここにリポジトリ一覧が表示されます。
           </Typography>
           <Button
             variant="contained"
             color="primary"
             startIcon={<GitHubIcon />}
             onClick={handleConnectGithub}
+            sx={{ borderRadius: 2, px: 3 }}
           >
             GitHubと連携する
           </Button>
-        </Box>
+        </Paper>
       )}
       
       {/* GitHub設定ダイアログ */}

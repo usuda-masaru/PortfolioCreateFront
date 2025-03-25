@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   CardActions,
-  CardMedia,
   Divider,
   List,
   ListItem,
@@ -16,10 +15,6 @@ import {
   IconButton,
   Chip,
   Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   CircularProgress,
   Paper,
   Alert,
@@ -27,9 +22,8 @@ import {
   useTheme,
   alpha,
   Container,
-  Stack,
   Tooltip,
-  Fade
+  Grow
 } from '@mui/material';
 import SyncIcon from '@mui/icons-material/Sync';
 import StarIcon from '@mui/icons-material/Star';
@@ -39,14 +33,16 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import SettingsIcon from '@mui/icons-material/Settings';
+import ArticleIcon from '@mui/icons-material/Article';
 import { QiitaArticle } from '../../types/interfaces';
 import { qiitaAPI, profileAPI } from '../../services/api';
-import { formatDistanceToNow, format } from 'date-fns';
+import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import api from '../../services/api';
 
 const QiitaEdit: React.FC = () => {
   const [accessToken, setAccessToken] = useState<string>('');
+  const [qiitaUsername, setQiitaUsername] = useState<string>('');
   const [articles, setArticles] = useState<QiitaArticle[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [syncLoading, setSyncLoading] = useState<boolean>(false);
@@ -56,17 +52,22 @@ const QiitaEdit: React.FC = () => {
 
   useEffect(() => {
     fetchArticles();
-    fetchAccessToken();
+    fetchProfileData();
   }, []);
 
-  const fetchAccessToken = async () => {
+  const fetchProfileData = async () => {
     try {
       const profile = await profileAPI.getMyProfile();
-      if (profile && profile.qiita_access_token) {
-        setAccessToken(profile.qiita_access_token);
+      if (profile) {
+        if (profile.qiita_access_token) {
+          setAccessToken(profile.qiita_access_token);
+        }
+        if (profile.qiita_username) {
+          setQiitaUsername(profile.qiita_username);
+        }
       }
     } catch (err) {
-      console.error('Qiitaアクセストークン取得エラー:', err);
+      console.error('プロフィール取得エラー:', err);
     }
   };
 
@@ -87,12 +88,20 @@ const QiitaEdit: React.FC = () => {
   const handleSaveToken = async () => {
     setLoading(true);
     try {
-      await qiitaAPI.updateAccessToken(accessToken);
+      // プロフィールを取得
+      const profile = await profileAPI.getMyProfile();
+      if (!profile.id) {
+        throw new Error('プロフィールIDが取得できませんでした');
+      }
+
+      // プロフィールを更新
+      await api.patch(`/api/profiles/${profile.id}/`, {
+        qiita_access_token: accessToken,
+        qiita_username: qiitaUsername
+      });
+
       setTokenSaved(true);
       setError(null);
-      
-      // トークン保存後も画面に表示されるようにする
-      setAccessToken(accessToken);
       
       setTimeout(() => setTokenSaved(false), 3000);
       
@@ -150,326 +159,284 @@ const QiitaEdit: React.FC = () => {
 
     if (articles.length === 0) {
       return (
-        <Box 
-          p={4} 
+        <Paper 
           sx={{ 
-            backgroundColor: alpha(theme.palette.info.light, 0.1),
+            p: 4, 
+            textAlign: 'center',
             borderRadius: 2,
-            border: `1px dashed ${theme.palette.info.main}`,
-            textAlign: 'center'
+            bgcolor: 'grey.50',
+            border: '1px dashed',
+            borderColor: 'grey.300'
           }}
         >
-          <Typography variant="h6" color="info.main" gutterBottom>
+          <ArticleIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
+          <Typography variant="h6" sx={{ mb: 1, fontWeight: 'medium' }}>
             記事がまだ同期されていません
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
             アクセストークンを設定して記事を同期すると、ここにQiita記事が表示されます。
           </Typography>
-          <Button 
-            variant="outlined" 
-            color="info" 
+          <Button
+            variant="contained"
+            color="primary"
             startIcon={<SyncIcon />}
             onClick={handleSyncArticles}
-            disabled={syncLoading}
+            disabled={syncLoading || !accessToken || !qiitaUsername}
+            sx={{ borderRadius: 2, px: 3 }}
           >
             記事を同期する
           </Button>
-        </Box>
+        </Paper>
       );
     }
 
     return (
-      <Grid container spacing={3}>
+      <Box>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            mb: 3
+          }}
+        >
+          <Typography variant="h5" component="h2" fontWeight="bold">
+            Qiita記事リスト
+          </Typography>
+          
+          <Typography variant="body2" color="text.secondary">
+            ⭐ アイコンをクリックすると、記事をポートフォリオで特集として表示できます。
+          </Typography>
+        </Box>
+
         {articles.map((article) => (
-          <Grid item xs={12} key={article.id}>
-            <Fade in={true} timeout={500}>
-              <Card 
-                sx={{ 
-                  display: 'flex',
-                  flexDirection: { xs: 'column', md: 'row' },
-                  position: 'relative',
-                  overflow: 'hidden',
-                  transition: 'all 0.3s ease',
-                  boxShadow: article.is_featured 
-                    ? `0 8px 16px ${alpha(theme.palette.primary.main, 0.2)}` 
-                    : '0 2px 8px rgba(0,0,0,0.08)',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 12px 20px rgba(0,0,0,0.1)'
-                  },
-                  ...(article.is_featured && {
-                    borderLeft: `4px solid ${theme.palette.primary.main}`,
-                    backgroundColor: alpha(theme.palette.primary.main, 0.02)
-                  })
-                }}
-              >
-                {article.is_featured && (
-                  <Box 
+          <Card 
+            key={article.id}
+            elevation={2} 
+            sx={{ 
+              mb: 3, 
+              borderRadius: 2,
+              overflow: 'visible',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: 4
+              }
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={8}>
+                  <Typography 
+                    variant="h6" 
+                    component="h3" 
                     sx={{ 
-                      position: 'absolute', 
-                      top: 0, 
-                      right: 0,
-                      backgroundColor: theme.palette.primary.main,
-                      color: theme.palette.primary.contrastText,
-                      px: 1.5,
-                      py: 0.5,
-                      fontSize: '0.75rem',
                       fontWeight: 'bold',
-                      borderBottomLeftRadius: 8,
-                      zIndex: 1,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
                     }}
                   >
-                    特集記事
+                    <ArticleIcon color="primary" />
+                    {article.title}
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                    {article.tags.map((tag) => (
+                      <Chip 
+                        key={tag} 
+                        label={tag} 
+                        size="small" 
+                        variant="outlined"
+                        sx={{ 
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          color: theme.palette.primary.main,
+                          fontWeight: 'medium',
+                          fontSize: '0.75rem',
+                        }}
+                      />
+                    ))}
                   </Box>
-                )}
-                <CardContent sx={{ flex: '1 0 auto', p: 3 }}>
-                  <Box sx={{ mb: 2 }}>
+                </Grid>
+                
+                <Grid item xs={12} sm={4}>
+                  <Box 
+                    sx={{ 
+                      display: 'flex',
+                      justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                      alignItems: 'flex-start',
+                      gap: 1,
+                      height: '100%',
+                      flexDirection: 'column',
+                      textAlign: { xs: 'left', sm: 'right' },
+                    }}
+                  >
                     <Typography 
-                      variant="h6" 
-                      component="div" 
+                      variant="body2" 
                       sx={{ 
-                        fontWeight: 'bold',
-                        mb: 1,
-                        lineHeight: 1.4,
-                        display: '-webkit-box',
-                        overflow: 'hidden',
-                        WebkitBoxOrient: 'vertical',
-                        WebkitLineClamp: 2,
+                        color: 'text.secondary',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                        gap: 0.5
                       }}
                     >
-                      {article.title}
+                      <CalendarTodayIcon fontSize="small" />
+                      {formatDate(article.created_at)}
                     </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, mb: 2 }}>
-                      {article.tags.map((tag) => (
-                        <Chip 
-                          key={tag} 
-                          label={tag} 
-                          size="small" 
-                          sx={{ 
-                            borderRadius: '4px',
-                            backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                            color: theme.palette.primary.main,
-                            fontWeight: 500,
-                            '&:hover': {
-                              backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                            }
-                          }} 
-                        />
-                      ))}
+                    
+                    <Box sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <ThumbUpAltIcon sx={{ fontSize: '0.875rem', mr: 0.5, color: theme.palette.success.main }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {article.likes_count}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <BookmarkIcon sx={{ fontSize: '0.875rem', mr: 0.5, color: theme.palette.info.main }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {article.stocks_count}
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
-                  
-                  <Stack 
-                    direction="row" 
-                    spacing={3} 
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Box 
                     sx={{ 
-                      color: 'text.secondary',
-                      fontSize: '0.875rem',
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
                       mt: 2
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <CalendarTodayIcon sx={{ fontSize: '1rem', mr: 0.5, color: theme.palette.text.secondary }} />
-                      <Typography variant="body2">
-                        {formatDate(article.created_at)}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <ThumbUpAltIcon sx={{ fontSize: '1rem', mr: 0.5, color: theme.palette.success.main }} />
-                      <Typography variant="body2" color="success.main" fontWeight="medium">
-                        {article.likes_count}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <BookmarkIcon sx={{ fontSize: '1rem', mr: 0.5, color: theme.palette.info.main }} />
-                      <Typography variant="body2" color="info.main" fontWeight="medium">
-                        {article.stocks_count}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </CardContent>
-                
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    justifyContent: 'center',
-                    p: 2,
-                    borderLeft: { xs: 'none', md: `1px solid ${theme.palette.divider}` },
-                    borderTop: { xs: `1px solid ${theme.palette.divider}`, md: 'none' },
-                    backgroundColor: alpha(theme.palette.background.default, 0.5),
-                  }}
-                >
-                  <Stack spacing={1.5}>
-                    <Tooltip title="特集記事として設定" placement="left">
-                      <IconButton 
-                        onClick={() => handleToggleFeatured(article.id)} 
-                        size="large"
-                        color={article.is_featured ? "primary" : "default"}
-                        sx={{
-                          backgroundColor: article.is_featured 
-                            ? alpha(theme.palette.primary.main, 0.1) 
-                            : 'transparent',
-                          '&:hover': {
-                            backgroundColor: article.is_featured 
-                              ? alpha(theme.palette.primary.main, 0.2) 
-                              : alpha(theme.palette.action.hover, 0.8)
-                          }
-                        }}
-                      >
-                        {article.is_featured ? <StarIcon /> : <StarBorderIcon />}
-                      </IconButton>
-                    </Tooltip>
+                    <Button
+                      startIcon={<OpenInNewIcon />}
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      size="small"
+                    >
+                      記事を開く
+                    </Button>
                     
-                    <Tooltip title="記事を開く" placement="left">
-                      <IconButton 
-                        component="a" 
-                        href={article.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        size="large"
-                        sx={{
-                          color: theme.palette.text.secondary,
-                          '&:hover': {
-                            color: theme.palette.primary.main,
-                            backgroundColor: alpha(theme.palette.primary.main, 0.1)
-                          }
-                        }}
-                      >
-                        <OpenInNewIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-                </Box>
-              </Card>
-            </Fade>
-          </Grid>
+                    <Box>
+                      <Tooltip title={article.is_featured ? "特集記事から削除" : "特集記事として設定"}>
+                        <IconButton 
+                          size="small" 
+                          color={article.is_featured ? "primary" : "default"}
+                          onClick={() => handleToggleFeatured(article.id)}
+                          sx={{ 
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              transform: 'scale(1.1)',
+                              bgcolor: alpha(theme.palette.primary.main, 0.1)
+                            }
+                          }}
+                        >
+                          {article.is_featured ? <StarIcon /> : <StarBorderIcon />}
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
+      </Box>
     );
   };
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ py: 4 }}>
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            mb: 4,
-            pb: 2,
-            borderBottom: `1px solid ${theme.palette.divider}`
-          }}
-        >
-          <SettingsIcon sx={{ fontSize: 28, color: theme.palette.primary.main, mr: 2 }} />
+    <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: 3, 
+          mb: 4, 
+          borderRadius: 2,
+          bgcolor: 'rgba(33, 150, 243, 0.06)',
+          color: 'primary.main',
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', md: 'center' },
+          gap: 2
+        }}
+      >
+        <Box>
           <Typography 
             variant="h4" 
             component="h1" 
             sx={{ 
               fontWeight: 'bold',
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              mb: 1
             }}
           >
+            <ArticleIcon sx={{ mr: 1.5, fontSize: '1.75rem' }} />
             Qiita連携設定
           </Typography>
+          <Typography variant="body1" sx={{ opacity: 0.9 }}>
+            Qiitaの記事をポートフォリオに表示して、あなたの技術発信をアピールできます。
+          </Typography>
         </Box>
-
-        {error && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 3, 
-              boxShadow: `0 2px 8px ${alpha(theme.palette.error.main, 0.2)}`,
-              borderRadius: 2
-            }}
-          >
-            {error}
-          </Alert>
-        )}
-
-        {tokenSaved && (
-          <Alert 
-            severity="success" 
-            sx={{ 
-              mb: 3, 
-              boxShadow: `0 2px 8px ${alpha(theme.palette.success.main, 0.2)}`,
-              borderRadius: 2
-            }}
-          >
-            アクセストークンを保存しました
-          </Alert>
-        )}
-
-        <Card 
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<SyncIcon />}
+          onClick={handleSyncArticles}
+          disabled={syncLoading || !accessToken || !qiitaUsername}
           sx={{ 
-            mb: 5, 
+            px: 3, 
+            py: 1,
             borderRadius: 2,
-            overflow: 'hidden',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+            boxShadow: 2,
+            fontWeight: 'bold'
+          }}
+        >
+          記事を同期
+        </Button>
+      </Paper>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3, whiteSpace: 'pre-line', borderRadius: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {tokenSaved && (
+        <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
+          設定を保存しました
+        </Alert>
+      )}
+
+      <Grow in={true} timeout={500}>
+        <Paper 
+          elevation={2}
+          sx={{ 
+            mb: 4,
+            borderRadius: 2,
+            overflow: 'hidden'
           }}
         >
           <Box 
             sx={{ 
               p: 0.5, 
-              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})` 
+              bgcolor: theme.palette.primary.main
             }}
           />
           
-          <Box
-            sx={{ 
-              height: 120,
-              backgroundColor: '#55c500', // Qiitaのブランドカラー
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontWeight: 'bold',
-              fontSize: '2rem',
-              letterSpacing: '0.05em',
-              position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent)',
-                backgroundSize: '10px 10px',
-                opacity: 0.3
-              }
-            }}
-          >
-            Qiita
-          </Box>
-          
-          <CardContent sx={{ p: 4 }}>
-            <Typography 
-              variant="h5" 
-              gutterBottom 
-              sx={{ 
-                fontWeight: 'bold',
-                color: theme.palette.text.primary,
-                display: 'flex',
-                alignItems: 'center'
-              }}
-            >
-              Qiitaアクセストークンの設定
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom fontWeight="medium">
+              Qiita連携設定
             </Typography>
             
-            <Typography 
-              variant="body1" 
-              color="text.secondary" 
-              sx={{ 
-                mb: 3,
-                lineHeight: 1.6
-              }}
-            >
-              Qiitaの記事をポートフォリオに表示するには、アクセストークンを設定してください。
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Qiitaの記事をポートフォリオに表示するには、ユーザー名とアクセストークンを設定してください。
               アクセストークンは
               <Typography 
                 component="a" 
@@ -478,8 +445,7 @@ const QiitaEdit: React.FC = () => {
                 rel="noopener noreferrer"
                 sx={{ 
                   color: theme.palette.primary.main,
-                  fontWeight: 'medium',
-                  textDecoration: 'none',
+                  mx: 0.5,
                   '&:hover': {
                     textDecoration: 'underline'
                   }
@@ -489,137 +455,68 @@ const QiitaEdit: React.FC = () => {
               </Typography>
               で取得できます。
             </Typography>
-            
-            <TextField
-              fullWidth
-              label="Qiitaアクセストークン"
-              value={accessToken}
-              onChange={(e) => setAccessToken(e.target.value)}
-              variant="outlined"
-              sx={{ 
-                mt: 2,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 1.5,
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: theme.palette.primary.main,
-                    borderWidth: '1px',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: theme.palette.primary.main,
-                    borderWidth: '2px',
-                  }
-                }
-              }}
-              margin="normal"
-              type="password"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      startIcon={loading ? undefined : <SaveIcon />}
-                      onClick={handleSaveToken}
-                      disabled={loading || !accessToken}
-                      sx={{ 
-                        borderRadius: 8,
-                        px: 3,
-                        py: 1,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        textTransform: 'none',
-                        fontWeight: 'bold',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
-                        }
-                      }}
-                    >
-                      {loading ? <CircularProgress size={24} /> : "保存"}
-                    </Button>
-                  </InputAdornment>
-                ),
-              }}
-            />
+
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Qiitaユーザー名"
+                  value={qiitaUsername}
+                  onChange={(e) => setQiitaUsername(e.target.value)}
+                  variant="outlined"
+                  margin="normal"
+                  placeholder="例: johndoe"
+                  helperText="Qiitaのユーザー名を入力してください"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <ArticleIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Qiitaアクセストークン"
+                  value={accessToken}
+                  onChange={(e) => setAccessToken(e.target.value)}
+                  variant="outlined"
+                  margin="normal"
+                  type="password"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SaveIcon color="action" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          startIcon={loading ? undefined : <SaveIcon />}
+                          onClick={handleSaveToken}
+                          disabled={loading || !accessToken || !qiitaUsername}
+                          sx={{ ml: 1 }}
+                        >
+                          {loading ? <CircularProgress size={24} /> : "保存"}
+                        </Button>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+            </Grid>
           </CardContent>
-        </Card>
+        </Paper>
+      </Grow>
 
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            mb: 3,
-            mt: 6
-          }}
-        >
-          <Typography 
-            variant="h5" 
-            component="h2" 
-            sx={{ 
-              fontWeight: 'bold',
-              position: 'relative',
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -8,
-                left: 0,
-                width: 40,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: theme.palette.primary.main
-              }
-            }}
-          >
-            Qiita記事リスト
-          </Typography>
-          
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={syncLoading ? <CircularProgress size={20} color="inherit" /> : <SyncIcon />}
-            onClick={handleSyncArticles}
-            disabled={syncLoading}
-            sx={{ 
-              borderRadius: 8,
-              px: 3,
-              py: 1,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              textTransform: 'none',
-              fontWeight: 'bold',
-              backgroundColor: theme.palette.primary.main,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
-                backgroundColor: theme.palette.primary.dark
-              }
-            }}
-          >
-            {syncLoading ? '同期中...' : '記事を同期'}
-          </Button>
-        </Box>
-
-        <Typography 
-          variant="body1" 
-          color="text.secondary" 
-          sx={{ 
-            mb: 4,
-            display: 'flex',
-            alignItems: 'center',
-            p: 2,
-            backgroundColor: alpha(theme.palette.warning.light, 0.1),
-            borderRadius: 2,
-            border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
-          }}
-        >
-          <StarIcon sx={{ color: theme.palette.warning.main, mr: 1 }} />
-          星アイコンをクリックすると、その記事をポートフォリオで特集として表示できます。
-        </Typography>
-
+      <Box>
         {renderArticleList()}
       </Box>
-    </Container>
+    </Box>
   );
 };
 

@@ -34,6 +34,17 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+interface RegisterResponse {
+  token: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+  };
+}
+
 export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
   const [state, setState] = useState<AuthState>(initialState);
   const navigate = useNavigate();
@@ -155,42 +166,38 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
     }));
     try {
       // API呼び出しを実装
-      console.log('ユーザー登録APIを呼び出し:', { username, email, password });
+      console.log('ユーザー登録APIを呼び出し:', { username, email });
       const userData = { username, email, password };
-      const response = await authAPI.register(userData);
+      const response = await authAPI.register(userData) as RegisterResponse;
       console.log('登録レスポンス:', response);
       
-      setState(prev => ({
-        ...prev,
-        loading: false
-      }));
+      // まずトークンを保存
+      localStorage.setItem('token', response.token);
       
-      // 登録処理完了
-      return;
-    } catch (error: any) {
-      console.error('登録エラー:', error);
-      
-      // エラーメッセージを取得して表示（詳細に）
-      let errorMessage = '登録に失敗しました。';
-      if (error.response && error.response.data) {
-        console.log('詳細エラーデータ:', error.response.data);
-        if (error.response.data.error) {
-          errorMessage = error.response.data.error;
-        } else if (typeof error.response.data === 'object') {
-          // オブジェクト形式のエラーメッセージを処理
-          const firstError = Object.entries(error.response.data)[0];
-          if (firstError && firstError.length > 1) {
-            const [field, message] = firstError;
-            errorMessage = `${field}: ${Array.isArray(message) ? message[0] : message}`;
-          }
-        }
-      }
+      // トークンを設定してからプロフィールを取得
+      const profile = await authAPI.getMyProfile();
       
       setState(prev => ({
         ...prev,
         loading: false,
-        error: errorMessage
+        isAuthenticated: true,
+        token: response.token,
+        user: profile.user_details
       }));
+      
+      // 登録成功後にダッシュボードへ遷移
+      navigate('/dashboard');
+      
+      return;
+    } catch (error: any) {
+      console.error('登録エラー:', error);
+      
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : '会員登録に失敗しました。入力内容を確認してください。'
+      }));
+      
       throw error;
     }
   };

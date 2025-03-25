@@ -10,7 +10,6 @@ import { profileAPI } from '../../services/api';
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import SkillsSection from '../../components/profile/SkillsSection';
 import ProcessExperiencesSection from '../../components/profile/ProcessExperiencesSection';
-import ProjectsSection from '../../components/profile/ProjectsSection';
 import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
 import ContactSection from '../../components/profile/ContactSection';
@@ -65,31 +64,57 @@ const SectionContainer: React.FC<SectionProps> = ({ title, children }) => {
 };
 
 const Portfolio: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { portfolio_slug } = useParams<{ portfolio_slug: string }>();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const theme = useTheme();
 
   useEffect(() => {
-    if (slug) {
-      fetchProfile();
-    }
-  }, [slug]);
+    console.log('Portfolio component mounted, portfolio_slug:', portfolio_slug);
+    fetchProfile();
+  }, [portfolio_slug]);
 
   // プロフィールデータの取得
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      // APIからデータを取得
-      const data = await profileAPI.getPublicProfile(slug || '');
-      console.log('Fetched profile data:', data);
-      setProfile(data);
+      console.log('Fetching profile for portfolio_slug:', portfolio_slug);
+      
+      // まず自分のプロフィールを取得して、それを公開プロフィールとして表示
+      const myProfile = await profileAPI.getMyProfile();
+      console.log('My profile data:', myProfile);
+      
+      // PublicProfileの形式に変換
+      const publicProfile: PublicProfile = {
+        ...myProfile,
+        display_name: myProfile.display_name,
+        profile_image: myProfile.profile_image,
+        title: myProfile.title,
+        bio: myProfile.bio,
+        specialty: myProfile.specialty,
+        location: myProfile.location,
+        email_public: myProfile.email_public,
+        github_username: myProfile.github_username,
+        qiita_username: myProfile.qiita_username,
+        twitter_username: myProfile.twitter_username,
+        linkedin_url: myProfile.linkedin_url,
+        website_url: myProfile.website_url,
+        skills: myProfile.skills || [],
+        process_experiences: myProfile.process_experiences || [],
+        education: myProfile.education || [],
+        work_experiences: myProfile.work_experiences || [],
+        github_repositories: (myProfile as any).github_repositories || [],
+        qiita_articles: (myProfile as any).qiita_articles || [],
+      };
+      
+      setProfile(publicProfile);
     } catch (error) {
       console.error('Error fetching profile:', error);
       setError('プロフィールの取得に失敗しました');
       
       // 開発中はエラー時にもサンプルデータを表示（本番環境では削除してください）
+      console.log('Using sample data for development');
       setProfile({
         display_name: "山田 太郎",
         profile_image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
@@ -105,7 +130,6 @@ const Portfolio: React.FC = () => {
         website_url: "https://yamada-taro.example.com",
         skills: [],
         qiita_articles: [],
-        projects: [],
         education: [],
         work_experiences: [],
       });
@@ -171,12 +195,6 @@ const Portfolio: React.FC = () => {
         </Box>
 
         <Box sx={{ mt: 4 }}>
-          <SectionContainer title="プロジェクト">
-            <ProjectsSection projects={profile.projects || []} />
-          </SectionContainer>
-        </Box>
-
-        <Box sx={{ mt: 4 }}>
           <SectionContainer title="職務経歴">
             <ExperienceSection experiences={profile.work_experiences || []} />
           </SectionContainer>
@@ -204,7 +222,7 @@ const Portfolio: React.FC = () => {
           </Box>
         )}
 
-        <Box sx={{ mt: 4, mb: 4 }}>
+        <Box sx={{ mt: 4 }}>
           <SectionContainer title="連絡先">
             <ContactSection profile={profile} />
           </SectionContainer>

@@ -1,45 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, TextField, Button, Grid, Divider, Slider, FormControl, InputLabel, MenuItem, Select, CircularProgress, Alert } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { 
+  Box, 
+  Typography, 
+  Paper, 
+  TextField, 
+  Button, 
+  Grid, 
+  Divider, 
+  CircularProgress, 
+  Alert,
+  Avatar,
+  alpha,
+  useTheme,
+  Chip
+} from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
-import { Radar } from 'react-chartjs-2';
 import {
-  Chart as ChartJS,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend
-} from 'chart.js';
-
-// Chart.jsコンポーネントを登録
-ChartJS.register(
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend
-);
+  Assignment as AssignmentIcon,
+  Architecture as ArchitectureIcon,
+  DesignServices as DesignServicesIcon,
+  DeveloperMode as DeveloperModeIcon,
+  BugReport as BugReportIcon,
+  Settings as SettingsIcon,
+  Save as SaveIcon,
+  Timeline as TimelineIcon
+} from '@mui/icons-material';
 
 // 担当工程の種類と表示名の定義
 const PROCESS_TYPES = [
-  // 開発プロセス（主要7工程）
-  { value: 'requirements', label: '要件定義', category: 'process' },
-  { value: 'basic_design', label: '基本設計', category: 'process' },
-  { value: 'detailed_design', label: '詳細設計', category: 'process' },
-  { value: 'implementation', label: '実装', category: 'process' },
-  { value: 'testing', label: '試験', category: 'process' },
-  { value: 'deployment', label: 'デプロイ/リリース', category: 'process' },
-  { value: 'operation', label: '運用/保守', category: 'process' },
+  { value: 'requirements', label: '要件定義', icon: <AssignmentIcon /> },
+  { value: 'basic_design', label: '基本設計', icon: <ArchitectureIcon /> },
+  { value: 'detailed_design', label: '詳細設計', icon: <DesignServicesIcon /> },
+  { value: 'implementation', label: '実装', icon: <DeveloperModeIcon /> },
+  { value: 'testing', label: '試験', icon: <BugReportIcon /> },
+  { value: 'deployment', label: 'デプロイ/リリース', icon: <AssignmentIcon /> },
+  { value: 'operation', label: '運用/保守', icon: <SettingsIcon /> },
 ];
 
-// カテゴリの定義
-const CATEGORIES = [
-  { id: 'process', label: '開発プロセス' },
-];
+// 工程タイプ別の色
+const PROCESS_COLORS: Record<string, { main: string, light: string, dark: string }> = {
+  "requirements": { main: '#3F51B5', light: '#C5CAE9', dark: '#303F9F' }, // インディゴ
+  "basic_design": { main: '#00796B', light: '#B2DFDB', dark: '#00695C' }, // ティール
+  "detailed_design": { main: '#7B1FA2', light: '#E1BEE7', dark: '#6A1B9A' }, // パープル
+  "implementation": { main: '#FF5722', light: '#FFCCBC', dark: '#E64A19' }, // ディープオレンジ
+  "testing": { main: '#D32F2F', light: '#FFCDD2', dark: '#C62828' },       // レッド
+  "deployment": { main: '#4CAF50', light: '#C8E6C9', dark: '#388E3C' },    // グリーン
+  "operation": { main: '#0288D1', light: '#B3E5FC', dark: '#0277BD' }      // ライトブルー
+};
 
 // 担当工程の経験データ型定義
 interface ProcessExperience {
@@ -65,24 +73,19 @@ const ProcessEdit: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [isReady, setIsReady] = useState(false);  // レンダリング準備状態
 
   // データの取得
   useEffect(() => {
     const fetchProcessExperiences = async () => {
       try {
         setLoading(true);
-        setIsReady(false);
-        
         const response = await api.get('/api/process-experiences/', {
           headers: { Authorization: `Token ${token}` }
         });
         
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-          // バックエンドから取得したデータをセット
           setExperiences(response.data as ProcessExperience[]);
         } else {
-          // データがない場合は初期状態をセット
           setExperiences(initialProcessExperiences);
         }
         setError(null);
@@ -91,8 +94,6 @@ const ProcessEdit: React.FC = () => {
         setError('担当工程データの取得に失敗しました。');
       } finally {
         setLoading(false);
-        // UIレンダリングの準備を整える
-        setTimeout(() => setIsReady(true), 500);
       }
     };
 
@@ -102,11 +103,12 @@ const ProcessEdit: React.FC = () => {
   }, [token]);
 
   // 経験値の更新ハンドラ
-  const handleExperienceChange = (index: number, value: number) => {
+  const handleExperienceChange = (index: number, value: string) => {
+    const numValue = parseInt(value) || 0;
     const updatedExperiences = [...experiences];
     updatedExperiences[index] = {
       ...updatedExperiences[index],
-      experience_count: value
+      experience_count: numValue
     };
     setExperiences(updatedExperiences);
   };
@@ -146,293 +148,233 @@ const ProcessEdit: React.FC = () => {
     }
   };
 
-  // レーダーチャートのデータ生成
-  const chartData = {
-    labels: PROCESS_TYPES.map(type => type.label),
-    datasets: [
-      {
-        label: '担当回数',
-        data: isReady && experiences.length > 0 
-          ? PROCESS_TYPES.map(type => {
-              const exp = experiences.find(e => e.process_type === type.value);
-              return exp ? exp.experience_count : 0;
-            })
-          : Array(PROCESS_TYPES.length).fill(0),
-        backgroundColor: `${theme.palette.primary.main}50`,
-        borderColor: theme.palette.primary.main,
-        borderWidth: 2,
-        pointBackgroundColor: theme.palette.primary.main,
-        pointHoverRadius: 5,
-      }
-    ]
-  };
-
-  // レーダーチャートのオプション
-  const chartOptions = {
-    scales: {
-      r: {
-        angleLines: {
-          display: true
-        },
-        suggestedMin: 0,
-        ticks: {
-          stepSize: 2
-        }
-      }
-    },
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context: any) {
-            return `担当回数: ${context.raw}回`;
-          }
-        }
-      }
-    },
-    maintainAspectRatio: false
-  };
-
-  // 説明付きの数値入力フィールド
-  const ExperienceInput = ({ index }: { index: number }) => {
-    // Hooks は常に最初に呼び出す必要がある
-    const [tempDescription, setTempDescription] = useState('');
-    
-    // インデックスが有効な場合のみ exp.description をセットする
-    useEffect(() => {
-      if (index >= 0 && index < experiences.length) {
-        const exp = experiences[index];
-        setTempDescription(exp.description || '');
-      }
-    }, [index, experiences]);
-    
-    // インデックスが範囲外でないかチェック
-    if (index < 0 || index >= experiences.length) {
-      return null;
-    }
-
-    const exp = experiences[index];
-    const processType = PROCESS_TYPES.find(t => t.value === exp.process_type);
-    
-    return (
-      <Paper sx={{ p: 3, mb: 2, borderRadius: 2, boxShadow: 2 }}>
-        <Typography variant="h6" fontWeight="bold" color="primary" gutterBottom>
-          {processType?.label || '未定義の工程'}
-        </Typography>
-
-        <Grid container spacing={3} alignItems="center" sx={{ mb: 2 }}>
-          <Grid item xs={12} md={6}>
-            <Typography gutterBottom>担当回数</Typography>
-            <TextField
-              type="number"
-              variant="outlined"
-              size="small"
-              label={`${exp.experience_count}回`}
-              value={exp.experience_count || 0}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                if (!isNaN(val) && val >= 0 && val <= 20) {
-                  handleExperienceChange(index, val);
-                }
-              }}
-              inputProps={{ min: 0, max: 20, step: 1 }}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="説明/備考"
-              multiline
-              rows={2}
-              variant="outlined"
-              value={tempDescription}
-              onChange={(e) => setTempDescription(e.target.value)}
-              onBlur={() => handleDescriptionChange(index, tempDescription)}
-              placeholder={`${processType?.label || ''}での経験について入力してください`}
-            />
-          </Grid>
-        </Grid>
-      </Paper>
-    );
-  };
-
-  // カテゴリごとに工程を表示するコンポーネント
-  const CategoryGroup = ({ categoryId }: { categoryId: string }) => {
-    const categoryProcesses = experiences.filter(exp => 
-      PROCESS_TYPES.find(type => type.value === exp.process_type)?.category === categoryId
-    );
-    
-    if (categoryProcesses.length === 0) return null;
-    
-    // カテゴリの表示名を取得
-    let categoryTitle = "";
-    switch(categoryId) {
-      case 'process':
-        categoryTitle = "開発プロセス";
-        break;
-      default:
-        categoryTitle = "その他";
-    }
-    
-    // 工程の正しい順序を取得するための配列
-    const orderedProcessTypes = PROCESS_TYPES.map(type => type.value);
-    
-    // 工程を定義順にソート
-    const sortedProcesses = [...categoryProcesses].sort((a, b) => {
-      const indexA = orderedProcessTypes.indexOf(a.process_type);
-      const indexB = orderedProcessTypes.indexOf(b.process_type);
-      return indexA - indexB;
-    });
-    
-    return (
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" color="primary" fontWeight="bold" sx={{ mb: 2 }}>
-          {categoryTitle}
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        
-        {sortedProcesses.map(exp => {
-          const index = experiences.findIndex(e => e.process_type === exp.process_type);
-          return <ExperienceInput key={exp.process_type} index={index} />;
-        })}
-      </Box>
-    );
+  // 経験レベルを計算
+  const getExperienceLevel = (count: number) => {
+    if (count === 0) return '未経験';
+    if (count <= 2) return '基礎経験あり';
+    if (count <= 5) return '実務経験あり';
+    if (count <= 10) return '豊富な経験あり';
+    return '専門家レベル';
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
       </Box>
     );
   }
 
-  // データは読み込まれたが、UIレンダリングの準備ができていない場合
-  if (!isReady) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
-        <CircularProgress size={24} sx={{ opacity: 0.5 }} />
-      </Box>
-    );
-  }
-
-  // カテゴリの表示順序
-  const categoryOrder = ['process'];
-
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" color="primary" gutterBottom fontWeight="bold">
-        担当工程管理
-      </Typography>
-      
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      
-      {saveSuccess && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          担当工程情報が正常に保存されました。
-        </Alert>
-      )}
-
-      <Grid container spacing={4}>
-        {/* レーダーチャート */}
-        <Grid item xs={12} md={5}>
-          <Paper 
+    <Box 
+      sx={{ 
+        maxWidth: 1200, 
+        mx: 'auto', 
+        py: 4,
+        px: { xs: 2, sm: 3 },
+        minHeight: 'calc(100vh - 64px)', // ヘッダーの高さを引く
+        borderRadius: 0
+      }}
+    >
+      {/* ヘッダー */}
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: 3, 
+          mb: 4, 
+          borderRadius: 2,
+          bgcolor: 'rgba(33, 150, 243, 0.06)',
+          color: 'primary.main',
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', md: 'center' },
+          gap: 2
+        }}
+      >
+        <Box>
+          <Typography 
+            variant="h4" 
+            component="h1" 
             sx={{ 
-              p: 3, 
-              height: '100%', 
-              borderRadius: 2,
-              boxShadow: 2,
+              fontWeight: 'bold',
               display: 'flex',
-              flexDirection: 'column'
+              alignItems: 'center',
+              mb: 1
             }}
           >
-            <Typography variant="h6" color="primary" gutterBottom fontWeight="bold">
-              担当工程の経験バランス
-            </Typography>
-            
-            {!isReady ? (
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                height: '300px',
-                color: 'text.secondary'
-              }}>
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  データ読み込み中...
-                </Typography>
-                <CircularProgress size={20} sx={{ opacity: 0.5 }} />
-              </Box>
-            ) : (
-              <>
-                {experiences.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                    データがありません
-                  </Typography>
-                ) : (
-                  <>
-                    {/* 全体のレーダーチャート */}
-                    <Box sx={{ 
-                      flex: 1, 
-                      minHeight: '300px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center' 
-                    }}>
-                      <Radar data={chartData} options={chartOptions} />
-                    </Box>
-                  </>
-                )}
-              </>
-            )}
-            
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontStyle: 'italic' }}>
-              各工程の担当回数をレーダーチャートで表示しています。
-            </Typography>
-          </Paper>
-        </Grid>
+            <TimelineIcon sx={{ mr: 1.5, fontSize: '1.75rem' }} />
+            担当工程管理
+          </Typography>
+          <Typography variant="body1" sx={{ opacity: 0.9 }}>
+            あなたの担当工程や案件経験を管理し、ポートフォリオに表示できます。
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<SaveIcon />}
+          onClick={handleSave}
+          disabled={saving}
+          sx={{ 
+            px: 3, 
+            py: 1,
+            borderRadius: 2,
+            boxShadow: 2,
+            fontWeight: 'bold'
+          }}
+        >
+          {saving ? '保存中...' : '変更を保存'}
+        </Button>
+      </Paper>
 
-        {/* 編集フォーム */}
-        <Grid item xs={12} md={7}>
-          <Paper 
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 0,
+          borderRadius: 2,
+          overflow: 'hidden',
+          boxShadow: `0 4px 20px ${alpha('#000', 0.05)}`,
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          bgcolor: 'white',
+          position: 'relative',
+          zIndex: 1
+        }}
+      >
+        {/* アラート */}
+        {error && (
+          <Alert 
+            severity="error" 
             sx={{ 
-              p: 3, 
-              borderRadius: 2,
-              boxShadow: 2,
+              mx: 3, 
+              mt: 2,
+              borderRadius: 1,
+              '& .MuiAlert-icon': {
+                color: theme.palette.error.main
+              }
             }}
           >
-            <Typography variant="h6" color="primary" gutterBottom fontWeight="bold">
-              各工程の担当経験を入力
-            </Typography>
-            
-            <Box sx={{ mt: 3 }}>
-              {categoryOrder.map(categoryId => (
-                <CategoryGroup key={categoryId} categoryId={categoryId} />
-              ))}
-            </Box>
-            
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
-              <Button 
-                variant="contained" 
-                color="primary"
-                onClick={handleSave}
-                disabled={saving}
-                startIcon={saving ? <CircularProgress size={20} color="inherit" /> : null}
+            {error}
+          </Alert>
+        )}
+        {saveSuccess && (
+          <Alert 
+            severity="success" 
+            sx={{ 
+              mx: 3, 
+              mt: 2,
+              borderRadius: 1,
+              '& .MuiAlert-icon': {
+                color: theme.palette.success.main
+              }
+            }}
+          >
+            変更が保存されました
+          </Alert>
+        )}
+
+        {/* 工程リスト */}
+        <Box sx={{ p: 3 }}>
+          {PROCESS_TYPES.map((type, index) => {
+            const experience = experiences[index];
+            const processColor = PROCESS_COLORS[type.value]?.main || theme.palette.primary.main;
+            const processColorLight = PROCESS_COLORS[type.value]?.light || theme.palette.primary.light;
+
+            return (
+              <Paper
+                key={type.value}
+                elevation={0}
+                sx={{
+                  p: 3,
+                  mb: 2,
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(processColor, 0.2)}`,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    boxShadow: `0 4px 20px ${alpha(processColor, 0.1)}`,
+                    borderColor: alpha(processColor, 0.3),
+                  }
+                }}
               >
-                {saving ? '保存中...' : '保存する'}
-              </Button>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
+                <Grid container spacing={3} alignItems="center">
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Avatar
+                        sx={{
+                          mr: 2,
+                          bgcolor: alpha(processColor, 0.1),
+                          color: processColor,
+                          width: 40,
+                          height: 40
+                        }}
+                      >
+                        {type.icon}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight="medium">
+                          {type.label}
+                        </Typography>
+                        <Chip
+                          label={getExperienceLevel(experience.experience_count)}
+                          size="small"
+                          sx={{
+                            mt: 0.5,
+                            bgcolor: alpha(processColor, 0.1),
+                            color: processColor,
+                            fontWeight: 'medium'
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={2}>
+                    <TextField
+                      label="担当案件回数"
+                      type="number"
+                      value={experience.experience_count}
+                      onChange={(e) => handleExperienceChange(index, e.target.value)}
+                      fullWidth
+                      InputProps={{
+                        inputProps: { min: 0 }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '&.Mui-focused fieldset': {
+                            borderColor: processColor,
+                          },
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: processColor,
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="特記事項"
+                      value={experience.description}
+                      onChange={(e) => handleDescriptionChange(index, e.target.value)}
+                      fullWidth
+                      multiline
+                      rows={2}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '&.Mui-focused fieldset': {
+                            borderColor: processColor,
+                          },
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: processColor,
+                        },
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </Paper>
+            );
+          })}
+        </Box>
+      </Paper>
     </Box>
   );
 };

@@ -27,8 +27,8 @@ import {
   School as SchoolIcon,
   Work as WorkIcon,
   Logout as LogoutIcon,
-  DesignServices as DesignServicesIcon,
   Article as ArticleIcon,
+  Assignment as AssignmentIcon,
 } from '@mui/icons-material';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import { useAuth } from '../../contexts/AuthContext';
@@ -42,7 +42,7 @@ interface MenuItem {
   icon: React.ReactNode;
 }
 
-const DashboardLayout: React.FC = () => {
+const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -105,11 +105,6 @@ const DashboardLayout: React.FC = () => {
       icon: <CodeIcon />,
     },
     {
-      text: 'プロジェクト',
-      path: '/dashboard/projects',
-      icon: <DesignServicesIcon />,
-    },
-    {
       text: '学歴',
       path: '/dashboard/education',
       icon: <SchoolIcon />,
@@ -118,6 +113,11 @@ const DashboardLayout: React.FC = () => {
       text: '職務経歴',
       path: '/dashboard/work-experience',
       icon: <WorkIcon />,
+    },
+    {
+      text: '担当工程',
+      path: '/dashboard/process',
+      icon: <AssignmentIcon />,
     },
     {
       text: 'GitHub連携',
@@ -456,4 +456,4 @@ const DashboardLayout: React.FC = () => {
   );
 };
 
-export default DashboardLayout; 
+export default DashboardLayout;
