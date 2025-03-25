@@ -18,13 +18,9 @@ import {
   Avatar,
   Menu,
   MenuItem as MuiMenuItem,
-  useTheme,
-  useMediaQuery,
-  alpha
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  ChevronLeft as ChevronLeftIcon,
   Dashboard as DashboardIcon,
   Person as PersonIcon,
   Code as CodeIcon,
@@ -33,7 +29,6 @@ import {
   Logout as LogoutIcon,
   Article as ArticleIcon,
   Assignment as AssignmentIcon,
-  Settings as SettingsIcon,
 } from '@mui/icons-material';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import { useAuth } from '../../contexts/AuthContext';
@@ -54,8 +49,7 @@ const DashboardLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [profile, setProfile] = useState<any>(null);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  // const theme = useTheme();
 
   // プロフィール情報をロードする
   useEffect(() => {

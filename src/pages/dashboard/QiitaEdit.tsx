@@ -23,31 +23,50 @@ import {
   alpha,
   Container,
   Tooltip,
-  Grow
+  Grow,
+  FormControlLabel,
+  Checkbox,
+  Avatar,
+  Link
 } from '@mui/material';
-import SyncIcon from '@mui/icons-material/Sync';
-import StarIcon from '@mui/icons-material/Star';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import SaveIcon from '@mui/icons-material/Save';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import ArticleIcon from '@mui/icons-material/Article';
+import {
+  Save as SaveIcon,
+  Refresh as RefreshIcon,
+  Delete as DeleteIcon,
+  Article as ArticleIcon
+} from '@mui/icons-material';
 import { QiitaArticle } from '../../types/interfaces';
 import { qiitaAPI, profileAPI } from '../../services/api';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import api from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
+import { UserProfile } from '../../types/interfaces';
+
+interface QiitaUser {
+  id: string;
+  name: string;
+  profile_image_url: string;
+  description: string;
+  organization: string | null;
+  location: string | null;
+  website_url: string | null;
+  twitter_username: string | null;
+  github_username: string | null;
+  followees_count: number;
+  followers_count: number;
+  items_count: number;
+}
 
 const QiitaEdit: React.FC = () => {
-  const [accessToken, setAccessToken] = useState<string>('');
-  const [qiitaUsername, setQiitaUsername] = useState<string>('');
-  const [articles, setArticles] = useState<QiitaArticle[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [qiitaUsername, setQiitaUsername] = useState('');
+  const [qiitaUser, setQiitaUser] = useState<QiitaUser | null>(null);
+  const [qiitaArticles, setQiitaArticles] = useState<QiitaArticle[]>([]);
+  const [loading, setLoading] = useState(false);
   const [syncLoading, setSyncLoading] = useState<boolean>(false);
   const [tokenSaved, setTokenSaved] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const theme = useTheme();
 
   useEffect(() => {
@@ -60,7 +79,7 @@ const QiitaEdit: React.FC = () => {
       const profile = await profileAPI.getMyProfile();
       if (profile) {
         if (profile.qiita_access_token) {
-          setAccessToken(profile.qiita_access_token);
+          setQiitaUsername(profile.qiita_username || '');
         }
         if (profile.qiita_username) {
           setQiitaUsername(profile.qiita_username);
@@ -75,7 +94,7 @@ const QiitaEdit: React.FC = () => {
     setLoading(true);
     try {
       const data = await qiitaAPI.getArticles();
-      setArticles(data);
+      setQiitaArticles(data);
       setError(null);
     } catch (err) {
       console.error('Qiita記事取得エラー:', err);
@@ -96,7 +115,7 @@ const QiitaEdit: React.FC = () => {
 
       // プロフィールを更新
       await api.patch(`/api/profiles/${profile.id}/`, {
-        qiita_access_token: accessToken,
+        qiita_access_token: qiitaUsername,
         qiita_username: qiitaUsername
       });
 
@@ -133,7 +152,7 @@ const QiitaEdit: React.FC = () => {
     try {
       await qiitaAPI.toggleFeatured(articleId);
       // 記事を更新（フロントエンドで状態を更新）
-      setArticles(articles.map(article => 
+      setQiitaArticles(qiitaArticles.map(article => 
         article.id === articleId 
           ? { ...article, is_featured: !article.is_featured } 
           : article
@@ -157,7 +176,7 @@ const QiitaEdit: React.FC = () => {
       );
     }
 
-    if (articles.length === 0) {
+    if (qiitaArticles.length === 0) {
       return (
         <Paper 
           sx={{ 
@@ -179,9 +198,9 @@ const QiitaEdit: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            startIcon={<SyncIcon />}
+            startIcon={<RefreshIcon />}
             onClick={handleSyncArticles}
-            disabled={syncLoading || !accessToken || !qiitaUsername}
+            disabled={syncLoading || !qiitaUsername}
             sx={{ borderRadius: 2, px: 3 }}
           >
             記事を同期する
@@ -209,7 +228,7 @@ const QiitaEdit: React.FC = () => {
           </Typography>
         </Box>
 
-        {articles.map((article) => (
+        {qiitaArticles.map((article) => (
           <Card 
             key={article.id}
             elevation={2} 
@@ -281,19 +300,19 @@ const QiitaEdit: React.FC = () => {
                         gap: 0.5
                       }}
                     >
-                      <CalendarTodayIcon fontSize="small" />
+                      <ArticleIcon fontSize="small" />
                       {formatDate(article.created_at)}
                     </Typography>
                     
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <ThumbUpAltIcon sx={{ fontSize: '0.875rem', mr: 0.5, color: theme.palette.success.main }} />
+                        <DeleteIcon sx={{ fontSize: '0.875rem', mr: 0.5, color: theme.palette.error.main }} />
                         <Typography variant="body2" color="text.secondary">
                           {article.likes_count}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <BookmarkIcon sx={{ fontSize: '0.875rem', mr: 0.5, color: theme.palette.info.main }} />
+                        <DeleteIcon sx={{ fontSize: '0.875rem', mr: 0.5, color: theme.palette.info.main }} />
                         <Typography variant="body2" color="text.secondary">
                           {article.stocks_count}
                         </Typography>
@@ -312,7 +331,7 @@ const QiitaEdit: React.FC = () => {
                     }}
                   >
                     <Button
-                      startIcon={<OpenInNewIcon />}
+                      startIcon={<DeleteIcon />}
                       href={article.url}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -335,7 +354,7 @@ const QiitaEdit: React.FC = () => {
                             }
                           }}
                         >
-                          {article.is_featured ? <StarIcon /> : <StarBorderIcon />}
+                          {article.is_featured ? <DeleteIcon /> : <DeleteIcon />}
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -387,9 +406,9 @@ const QiitaEdit: React.FC = () => {
         <Button
           variant="contained"
           color="primary"
-          startIcon={<SyncIcon />}
+          startIcon={<RefreshIcon />}
           onClick={handleSyncArticles}
-          disabled={syncLoading || !accessToken || !qiitaUsername}
+          disabled={syncLoading || !qiitaUsername}
           sx={{ 
             px: 3, 
             py: 1,
@@ -438,8 +457,7 @@ const QiitaEdit: React.FC = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Qiitaの記事をポートフォリオに表示するには、ユーザー名とアクセストークンを設定してください。
               アクセストークンは
-              <Typography 
-                component="a" 
+              <Link 
                 href="https://qiita.com/settings/applications" 
                 target="_blank" 
                 rel="noopener noreferrer"
@@ -452,7 +470,7 @@ const QiitaEdit: React.FC = () => {
                 }}
               >
                 Qiita設定ページ
-              </Typography>
+              </Link>
               で取得できます。
             </Typography>
 
@@ -480,8 +498,8 @@ const QiitaEdit: React.FC = () => {
                 <TextField
                   fullWidth
                   label="Qiitaアクセストークン"
-                  value={accessToken}
-                  onChange={(e) => setAccessToken(e.target.value)}
+                  value={qiitaUsername}
+                  onChange={(e) => setQiitaUsername(e.target.value)}
                   variant="outlined"
                   margin="normal"
                   type="password"
@@ -498,7 +516,7 @@ const QiitaEdit: React.FC = () => {
                           color="primary"
                           startIcon={loading ? undefined : <SaveIcon />}
                           onClick={handleSaveToken}
-                          disabled={loading || !accessToken || !qiitaUsername}
+                          disabled={loading || !qiitaUsername}
                           sx={{ ml: 1 }}
                         >
                           {loading ? <CircularProgress size={24} /> : "保存"}

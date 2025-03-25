@@ -3,16 +3,11 @@ import { Link } from 'react-router-dom';
 import { 
   Typography, 
   Grid, 
-  Card, 
-  CardContent, 
-  CardActions, 
   Button, 
   Box,
-  Divider,
   Chip,
   Avatar,
   Paper,
-  Stack
 } from '@mui/material';
 import { 
   Person as PersonIcon, 
@@ -20,14 +15,11 @@ import {
   School as SchoolIcon,
   Work as WorkIcon,
   OpenInNew as OpenInNewIcon,
-  ManageAccounts as ManageAccountsIcon,
-  Build as BuildIcon,
   Assignment as AssignmentIcon,
   Visibility as VisibilityIcon,
   GitHub as GitHubIcon,
   Article as ArticleIcon
 } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
 import { UserProfile } from '../../types/interfaces';
 import { authAPI } from '../../services/api';
 
@@ -163,7 +155,6 @@ const StatusItem: React.FC<StatusItemProps> = ({ icon, label, value, completed }
 };
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 

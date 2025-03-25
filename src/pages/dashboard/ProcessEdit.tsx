@@ -6,7 +6,6 @@ import {
   TextField, 
   Button, 
   Grid, 
-  Divider, 
   CircularProgress, 
   Alert,
   Avatar,
@@ -64,6 +63,20 @@ const initialProcessExperiences: ProcessExperience[] = PROCESS_TYPES.map(type =>
   experience_count: 0,
   description: ''
 }));
+
+// 工程ステータスに応じた色を返す
+const getProcessColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'skilled':
+      return 'success';
+    case 'medium':
+      return 'info';
+    case 'beginner':
+      return 'warning';
+    default:
+      return 'default';
+  }
+};
 
 const ProcessEdit: React.FC = () => {
   const theme = useTheme();
@@ -278,7 +291,6 @@ const ProcessEdit: React.FC = () => {
           {PROCESS_TYPES.map((type, index) => {
             const experience = experiences[index];
             const processColor = PROCESS_COLORS[type.value]?.main || theme.palette.primary.main;
-            const processColorLight = PROCESS_COLORS[type.value]?.light || theme.palette.primary.light;
 
             return (
               <Paper

@@ -1,19 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, Typography, TextField, Button, Grid, Paper, 
-  CircularProgress, Alert, Divider, IconButton, Chip,
-  FormControl, InputLabel, Select, MenuItem, 
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  FormControlLabel, Checkbox, FormGroup, FormLabel, 
-  Autocomplete, Stack, Card, CardContent, CardActions,
-  TableContainer, Table, TableHead, TableBody, TableRow, TableCell,
-  Collapse, Tooltip
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Grid,
+  IconButton,
+  TextField,
+  Typography,
+  Chip,
+  FormControl,
+  FormControlLabel,
+  Checkbox,
+  FormGroup,
+  FormLabel,
+  Paper,
+  CircularProgress,
+  Alert,
+  Divider,
+  Collapse,
+  useTheme,
+  alpha,
 } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select';
-import { 
+import {
   Add as AddIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
+  Edit as EditIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
   ExpandMore as ExpandMoreIcon,
@@ -21,17 +37,12 @@ import {
   Business as BusinessIcon,
   Timeline as TimelineIcon,
   Group as GroupIcon,
-  Assignment as AssignmentIcon,
   Code as CodeIcon,
   Storage as StorageIcon,
   Work as WorkIcon
 } from '@mui/icons-material';
-import { format, parse } from 'date-fns';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-
-import { workExperienceAPI, skillAPI } from '../../services/api';
-import { WorkExperience, Skill } from '../../types/interfaces';
+import { workExperienceAPI } from '../../services/api';
+import { WorkExperience } from '../../types/interfaces';
 
 // プロセス種別の選択肢
 const PROCESS_TYPES = [
@@ -88,62 +99,6 @@ const emptyWorkExperience: Partial<WorkExperience> = {
     operation: false,
     management: false
   }
-};
-
-// スキル選択コンポーネント
-const SkillSelector: React.FC<{
-  selectedSkills: Skill[];
-  onSkillsChange: (skills: Skill[]) => void;
-}> = ({ selectedSkills, onSkillsChange }) => {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSkills = async () => {
-      try {
-        setLoading(true);
-        const fetchedSkills = await skillAPI.getSkills();
-        setSkills(fetchedSkills);
-      } catch (error) {
-        console.error('スキル取得エラー:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSkills();
-  }, []);
-
-  if (loading) {
-    return <CircularProgress size={24} />;
-  }
-
-  return (
-    <Autocomplete
-      multiple
-      options={skills}
-      value={selectedSkills}
-      getOptionLabel={(option) => option.name}
-      onChange={(_, newValue) => onSkillsChange(newValue)}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label="使用スキル"
-          placeholder="スキルを選択"
-          fullWidth
-        />
-      )}
-      renderTags={(value, getTagProps) =>
-        value.map((option, index) => (
-          <Chip
-            label={option.name}
-            {...getTagProps({ index })}
-            key={option.id}
-          />
-        ))
-      }
-    />
-  );
 };
 
 // 文字列配列入力コンポーネント
@@ -303,26 +258,11 @@ const WorkExperienceDialog: React.FC<{
     }));
   };
 
-  const handleSelectChange = (e: SelectChangeEvent<string>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: checked
-    }));
-  };
-
-  const handleSkillsChange = (skills: Skill[]) => {
-    setFormData(prev => ({
-      ...prev,
-      skills_used_details: skills
     }));
   };
 
@@ -1026,13 +966,41 @@ const WorkExperienceItem: React.FC<{
 
 // メインコンポーネント
 const WorkExperienceEdit: React.FC = () => {
-  const [workExperiences, setWorkExperiences] = useState<WorkExperience[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [experiences, setExperiences] = useState<WorkExperience[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [currentWorkExperience, setCurrentWorkExperience] = useState<Partial<WorkExperience>>(emptyWorkExperience);
-  const [isNewWorkExperience, setIsNewWorkExperience] = useState(true);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [currentExperience, setCurrentExperience] = useState<Partial<WorkExperience>>({
+    position: '',
+    project_name: '',
+    company: '',
+    start_date: '',
+    end_date: '',
+    current: false,
+    team_size: undefined,
+    details: {
+      project_detail: '',
+      process_work_detail: ''
+    },
+    skills_used_details: [],
+    os_used: [],
+    languages_used: [],
+    db_used: [],
+    frameworks_used: [],
+    process_roles: [],
+    process_details: {
+      requirements: false,
+      basic_design: false,
+      detailed_design: false,
+      implementation: false,
+      testing: false,
+      deployment: false,
+      operation: false,
+      management: false
+    }
+  });
+  const [experienceDialogOpen, setExperienceDialogOpen] = useState<boolean>(false);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
   // 職務経歴の取得
   const fetchWorkExperiences = async () => {
@@ -1048,7 +1016,7 @@ const WorkExperienceEdit: React.FC = () => {
         return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
       });
       
-      setWorkExperiences(sortedData);
+      setExperiences(sortedData);
     } catch (err) {
       console.error('職務経歴の取得に失敗しました', err);
       setError('職務経歴の取得に失敗しました。再読み込みしてください。');
@@ -1067,21 +1035,21 @@ const WorkExperienceEdit: React.FC = () => {
 
   // 新規作成ダイアログを開く
   const handleOpenCreateDialog = () => {
-    setCurrentWorkExperience(emptyWorkExperience);
-    setIsNewWorkExperience(true);
-    setDialogOpen(true);
+    setCurrentExperience(emptyWorkExperience);
+    setIsEditMode(false);
+    setExperienceDialogOpen(true);
   };
 
   // 編集ダイアログを開く
   const handleOpenEditDialog = (workExperience: WorkExperience) => {
-    setCurrentWorkExperience(workExperience);
-    setIsNewWorkExperience(false);
-    setDialogOpen(true);
+    setCurrentExperience(workExperience);
+    setIsEditMode(true);
+    setExperienceDialogOpen(true);
   };
 
   // ダイアログを閉じる
   const handleCloseDialog = () => {
-    setDialogOpen(false);
+    setExperienceDialogOpen(false);
   };
 
   // 職務経歴の保存（新規作成または更新）
@@ -1090,23 +1058,23 @@ const WorkExperienceEdit: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      if (isNewWorkExperience) {
-        // 新規作成
-        await workExperienceAPI.createWorkExperience(data);
-        setSuccessMessage('職務経歴を新規作成しました');
-      } else {
+      if (isEditMode) {
         // 更新
         await workExperienceAPI.updateWorkExperience(data);
-        setSuccessMessage('職務経歴を更新しました');
+        setSuccess('職務経歴を更新しました');
+      } else {
+        // 新規作成
+        await workExperienceAPI.createWorkExperience(data);
+        setSuccess('職務経歴を新規作成しました');
       }
       
       // ダイアログを閉じて一覧を再取得
-      setDialogOpen(false);
+      setExperienceDialogOpen(false);
       await fetchWorkExperiences();
       
       // 成功メッセージを3秒後に消す
       setTimeout(() => {
-        setSuccessMessage(null);
+        setSuccess(null);
       }, 3000);
     } catch (err: any) {
       console.error('職務経歴の保存に失敗しました', err);
@@ -1140,12 +1108,12 @@ const WorkExperienceEdit: React.FC = () => {
         // APIから削除
         await workExperienceAPI.deleteWorkExperience(id);
         
-        setSuccessMessage('職務経歴を削除しました');
+        setSuccess('職務経歴を削除しました');
         await fetchWorkExperiences();
         
         // 成功メッセージを3秒後に消す
         setTimeout(() => {
-          setSuccessMessage(null);
+          setSuccess(null);
         }, 3000);
       } catch (err) {
         console.error('職務経歴の削除に失敗しました', err);
@@ -1214,9 +1182,9 @@ const WorkExperienceEdit: React.FC = () => {
         </Alert>
       )}
 
-      {successMessage && (
+      {success && (
         <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
-          {successMessage}
+          {success}
         </Alert>
       )}
 
@@ -1224,7 +1192,7 @@ const WorkExperienceEdit: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
         </Box>
-      ) : workExperiences.length === 0 ? (
+      ) : experiences.length === 0 ? (
         <Paper 
           sx={{ 
             p: 4, 
@@ -1254,7 +1222,7 @@ const WorkExperienceEdit: React.FC = () => {
         </Paper>
       ) : (
         <Box>
-          {workExperiences.map((exp) => (
+          {experiences.map((exp) => (
             <WorkExperienceItem
               key={exp.id}
               workExperience={exp}
@@ -1266,11 +1234,11 @@ const WorkExperienceEdit: React.FC = () => {
       )}
 
       <WorkExperienceDialog
-        open={dialogOpen}
+        open={experienceDialogOpen}
         onClose={handleCloseDialog}
-        workExperience={currentWorkExperience}
+        workExperience={currentExperience}
         onSave={handleSaveWorkExperience}
-        isNew={isNewWorkExperience}
+        isNew={!isEditMode}
       />
     </Box>
   );

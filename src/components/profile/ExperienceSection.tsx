@@ -4,19 +4,15 @@ import {
   Typography, 
   Card, 
   CardContent, 
-  Grid,
-  useTheme
+  Grid
 } from '@mui/material';
 import { WorkExperience } from '../../types/interfaces';
-import { Work as WorkIcon } from '@mui/icons-material';
 
 interface ExperienceSectionProps {
   experiences: WorkExperience[];
 }
 
 const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences }) => {
-  const theme = useTheme();
-  
   const sortedExperiences = [...experiences].sort((a, b) => {
     return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
   });

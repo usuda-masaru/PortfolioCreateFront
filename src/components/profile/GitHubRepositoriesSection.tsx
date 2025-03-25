@@ -4,19 +4,15 @@ import {
   Typography, 
   Card, 
   CardContent, 
-  Grid,
-  useTheme
+  Grid
 } from '@mui/material';
 import { GitHubRepository } from '../../types/interfaces';
-import { GitHub as GitHubIcon } from '@mui/icons-material';
 
 interface GitHubRepositoriesSectionProps {
   repositories: GitHubRepository[];
 }
 
 const GitHubRepositoriesSection: React.FC<GitHubRepositoriesSectionProps> = ({ repositories }) => {
-  const theme = useTheme();
-  
   const sortedRepositories = [...repositories].sort((a, b) => {
     return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
   });

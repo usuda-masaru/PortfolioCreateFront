@@ -1,28 +1,7 @@
 import React from 'react';
-import { Box, Typography, Tooltip, alpha, useTheme, Card, CardContent, Grid } from '@mui/material';
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
-import 'react-circular-progressbar/dist/styles.css';
-import { AccessTime as TimeIcon, Star as StarIcon } from '@mui/icons-material';
+import { Box, Typography, Card, CardContent, Grid } from '@mui/material';
+import { AccessTime as TimeIcon } from '@mui/icons-material';
 import { Skill, SkillCategory } from '../../types/interfaces';
-import {
-  Chart as ChartJS,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip as ChartTooltip,
-  Legend
-} from 'chart.js';
-
-// ChartJSの必要なコンポーネントを登録
-ChartJS.register(
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  ChartTooltip,
-  Legend
-);
 
 // アイコン表示用のコンポーネント
 const IconDisplay: React.FC<{ iconId: string; size?: number }> = ({ iconId, size = 24 }) => {
@@ -132,8 +111,6 @@ interface SkillsSectionProps {
 }
 
 const SkillsSection: React.FC<SkillsSectionProps> = ({ skills }) => {
-  const theme = useTheme();
-
   // スキルをカテゴリごとにグループ化
   const groupedSkills = React.useMemo(() => {
     // skillsがSkillCategory[]型の場合（PublicProfileのskills）

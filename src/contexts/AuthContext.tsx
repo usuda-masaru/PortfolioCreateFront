@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User, AuthState } from '../types/interfaces';
 import { authAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -13,27 +13,20 @@ const initialState: AuthState = {
 };
 
 // コンテキスト作成
-export interface AuthContextType {
-  currentUser: User | null;
+interface AuthContextType {
   user: User | null;
-  isAuthenticated: boolean;
-  token: string | null;
-  error: string | null;
   loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  error: string | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  clearErrors: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 // コンテキストプロバイダーの作成
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
 interface RegisterResponse {
   token: string;
   user: {
@@ -45,8 +38,24 @@ interface RegisterResponse {
   };
 }
 
-export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
-  const [state, setState] = useState<AuthState>(initialState);
+export function useAuth() {
+  const context = useContext(AuthContext);
+  
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  
+  return context;
+}
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [state, setState] = useState<AuthState>({
+    isAuthenticated: false,
+    user: null,
+    token: null,
+    loading: true,
+    error: null
+  });
   const navigate = useNavigate();
 
   // 初期化時にローカルストレージからトークンを取得
@@ -85,7 +94,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
   }, []);
 
   // ログイン関数
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     setState(prev => ({
       ...prev,
       loading: true,
@@ -93,7 +102,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
     }));
     
     try {
-      const data = await authAPI.login(username, password);
+      const data = await authAPI.login(email, password);
       // トークンをローカルストレージに保存
       localStorage.setItem('token', data.token);
       
@@ -148,14 +157,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
       setState(initialState);
       navigate('/login');
     }
-  };
-
-  // エラーをクリアする関数
-  const clearErrors = () => {
-    setState(prev => ({
-      ...prev,
-      error: null
-    }));
   };
 
   const register = async (username: string, email: string, password: string) => {
@@ -227,17 +228,14 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
   };
 
   const value: AuthContextType = {
-    currentUser: state.user,
     user: state.user,
-    isAuthenticated: state.isAuthenticated,
-    token: state.token,
-    error: state.error,
     loading: state.loading,
+    error: state.error,
+    token: state.token,
     login,
-    logout,
     register,
+    logout,
     resetPassword,
-    clearErrors
   };
 
   return (
@@ -245,15 +243,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
       {children}
     </AuthContext.Provider>
   );
-};
-
-// カスタムフック
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };
 
 export default AuthContext; 

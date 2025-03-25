@@ -7,7 +7,7 @@ import {
   FormHelperText, Chip, Tooltip, Avatar, SelectChangeEvent,
   InputAdornment, Tab, Tabs, Modal, TextField as MuiTextField,
   Checkbox, FormControlLabel, List, ListItem, ListItemText,
-  ListItemButton
+  ListItemButton, useTheme, alpha
 } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, Error as ErrorIcon } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
@@ -25,8 +25,6 @@ import { skillAPI } from '../../services/api';
 import { API_BASE_URL } from '../../services/api';
 import { Skill, SkillCategory } from '../../types/interfaces';
 import api from '../../services/api'; // 既にimportされている場合は無視
-import { alpha } from '@mui/material/styles';
-import { useTheme } from '@mui/material/styles';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -263,7 +261,7 @@ const getCategoryStyle = (categoryName: string): { bg: string; icon: string; col
 
 const SkillsEdit: React.FC = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
-  const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([]);
+  const [categories, setCategories] = useState<SkillCategory[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -306,7 +304,7 @@ const SkillsEdit: React.FC = () => {
       
       // カテゴリを順序で並べ替え
       const sortedCategories = [...categoriesData].sort((a, b) => a.order - b.order);
-      setSkillCategories(sortedCategories);
+      setCategories(sortedCategories);
       
       // スキルをカテゴリごとに分類
       setSkills(skillsData);
@@ -512,7 +510,7 @@ const SkillsEdit: React.FC = () => {
     setSavingCategory(true);
     try {
       const createdCategory = await skillAPI.createCategory(newCategory);
-      setSkillCategories([...skillCategories, createdCategory]);
+      setCategories([...categories, createdCategory]);
       setSuccess(`カテゴリ「${createdCategory.name}」を作成しました`);
       
       // 成功メッセージを表示して3秒後に消す
@@ -585,8 +583,8 @@ const SkillsEdit: React.FC = () => {
     try {
       await skillAPI.deleteCategory(categoryId);
       // カテゴリリストを更新
-      const updatedCategories = skillCategories.filter(cat => cat.id !== categoryId);
-      setSkillCategories(updatedCategories);
+      const updatedCategories = categories.filter(cat => cat.id !== categoryId);
+      setCategories(updatedCategories);
       // 削除されたカテゴリに属するスキルを更新
       const updatedSkills = skills.map(skill => {
         if (skill.category === categoryId) {
@@ -709,7 +707,7 @@ const SkillsEdit: React.FC = () => {
               color="primary"
               startIcon={<AddIcon />}
               onClick={() => {
-                setNewCategory({ name: '', order: skillCategories.length + 1 });
+                setNewCategory({ name: '', order: categories.length + 1 });
                 setCategoryDialogOpen(true);
               }}
               size="small"
@@ -719,7 +717,7 @@ const SkillsEdit: React.FC = () => {
             </Button>
           </Box>
 
-          {skillCategories.length === 0 ? (
+          {categories.length === 0 ? (
             <Box sx={{ p: 4, textAlign: 'center' }}>
               <Typography variant="body1" color="text.secondary">
                 カテゴリが登録されていません。「カテゴリ追加」から新しいカテゴリを作成してください。
@@ -729,8 +727,8 @@ const SkillsEdit: React.FC = () => {
             <>
               <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs
-                  value={selectedCategory ? skillCategories.findIndex(cat => cat.id === selectedCategory.id) : 0}
-                  onChange={(_, newValue) => setSelectedCategory(skillCategories[newValue] || null)}
+                  value={selectedCategory ? categories.findIndex(cat => cat.id === selectedCategory.id) : 0}
+                  onChange={(_, newValue) => setSelectedCategory(categories[newValue] || null)}
                   variant="scrollable"
                   scrollButtons="auto"
                   sx={{
@@ -738,7 +736,7 @@ const SkillsEdit: React.FC = () => {
                     pt: 1
                   }}
                 >
-                  {skillCategories.map((category) => (
+                  {categories.map((category) => (
                     <Tab 
                       key={category.id} 
                       label={category.name}
@@ -971,7 +969,7 @@ const SkillsEdit: React.FC = () => {
                   onChange={e => setCurrentSkill({...currentSkill, category: e.target.value as number})}
                   label="カテゴリ"
                 >
-                  {skillCategories.map(category => (
+                  {categories.map(category => (
                     <MenuItem key={category.id} value={category.id}>
                       {category.name}
                     </MenuItem>
@@ -1223,7 +1221,7 @@ const SkillsEdit: React.FC = () => {
             label="表示順序"
             type="number"
             fullWidth
-            value={newCategory.order || skillCategories.length + 1}
+            value={newCategory.order || categories.length + 1}
             onChange={e => setNewCategory({...newCategory, order: parseInt(e.target.value)})}
             InputProps={{ inputProps: { min: 1 } }}
             margin="normal"
