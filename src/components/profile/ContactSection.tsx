@@ -25,8 +25,6 @@ interface ContactSectionProps {
 }
 
 const ContactSection: React.FC<ContactSectionProps> = ({ profile }) => {
-  const theme = useTheme();
-  
   return (
     <Box component="section">
       <Grid container spacing={3}>
@@ -136,7 +134,6 @@ interface SocialLinkProps {
 
 const SocialLink: React.FC<SocialLinkProps> = ({ icon, label, value, link }) => {
   const theme = useTheme();
-  
   return (
     <Box 
       sx={{ 

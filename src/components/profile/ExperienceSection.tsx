@@ -66,12 +66,11 @@ const PROCESS_TEXT_COLORS = {
   '運用/保守': '#0288D1'      // ライトブルー
 };
 
-// 在籍期間を計算する関数
 const calculateDuration = (workExperience: WorkExperience): string => {
   const startDate = new Date(workExperience.start_date);
   const endDate = workExperience.current ? new Date() : 
                  (workExperience.end_date ? new Date(workExperience.end_date) : new Date());
-  
+
   // 月数の差を計算
   let months = (endDate.getFullYear() - startDate.getFullYear()) * 12;
   months += endDate.getMonth() - startDate.getMonth();
