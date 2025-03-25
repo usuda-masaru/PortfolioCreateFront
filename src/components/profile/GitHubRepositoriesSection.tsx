@@ -18,26 +18,10 @@ import {
   BugReport as IssueIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-
-interface GitHubRepository {
-  id: number;
-  name: string;
-  full_name: string;
-  html_url: string;
-  description: string;
-  language: string;
-  stargazers_count: number;
-  forks_count: number;
-  open_issues_count: number;
-  watchers_count: number;
-  created_at: string;
-  updated_at: string;
-  pushed_at: string;
-  featured: boolean;
-  topics: string[];
-  is_fork: boolean;
-  is_private: boolean;
-}
+import { GitHubRepository } from '../../types/interfaces';
+import { formatDistanceToNow } from 'date-fns';
+import { ja } from 'date-fns/locale';
+import { Article as ArticleIcon } from '@mui/icons-material';
 
 interface GitHubRepositoriesSectionProps {
   repositories: GitHubRepository[];
@@ -47,6 +31,10 @@ const MotionCard = motion(Card);
 
 const GitHubRepositoriesSection: React.FC<GitHubRepositoriesSectionProps> = ({ repositories }) => {
   const theme = useTheme();
+  
+  const sortedRepositories = [...repositories].sort((a, b) => {
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+  });
   
   if (!repositories || repositories.length === 0) {
     return (
@@ -87,7 +75,7 @@ const GitHubRepositoriesSection: React.FC<GitHubRepositoriesSectionProps> = ({ r
         animate="visible"
       >
         <Grid container spacing={3}>
-          {repositories.map((repo) => (
+          {sortedRepositories.map((repo) => (
             <Grid item xs={12} sm={6} md={4} key={repo.id}>
               <RepoCard repo={repo} variants={itemVariants} />
             </Grid>

@@ -9,8 +9,7 @@ import {
   Alert, 
   useTheme,
   alpha,
-  InputAdornment,
-  useMediaQuery
+  InputAdornment
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -26,7 +25,6 @@ const ForgotPassword: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { resetPassword, loading } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     setMounted(true);

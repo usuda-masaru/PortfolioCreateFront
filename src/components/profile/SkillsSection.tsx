@@ -1,10 +1,9 @@
 import React from 'react';
-import { Box, Typography, Tooltip, alpha, useTheme, Paper, Grid } from '@mui/material';
+import { Box, Typography, Tooltip, alpha, useTheme } from '@mui/material';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import { AccessTime as TimeIcon, Star as StarIcon, Code as CodeIcon } from '@mui/icons-material';
-import { Skill, ProcessExperience, SkillCategory } from '../../types/interfaces';
-import { Radar } from 'react-chartjs-2';
+import { AccessTime as TimeIcon, Star as StarIcon } from '@mui/icons-material';
+import { Skill, SkillCategory } from '../../types/interfaces';
 import {
   Chart as ChartJS,
   RadialLinearScale,

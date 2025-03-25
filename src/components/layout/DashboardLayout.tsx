@@ -17,10 +17,14 @@ import {
   Button,
   Avatar,
   Menu,
-  MenuItem,
+  MenuItem as MuiMenuItem,
+  useTheme,
+  useMediaQuery,
+  alpha
 } from '@mui/material';
 import {
   Menu as MenuIcon,
+  ChevronLeft as ChevronLeftIcon,
   Dashboard as DashboardIcon,
   Person as PersonIcon,
   Code as CodeIcon,
@@ -29,6 +33,7 @@ import {
   Logout as LogoutIcon,
   Article as ArticleIcon,
   Assignment as AssignmentIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import { useAuth } from '../../contexts/AuthContext';
@@ -36,11 +41,11 @@ import { profileAPI } from '../../services/api';
 
 const drawerWidth = 240;
 
-interface MenuItem {
+type MenuItemType = {
   text: string;
   path: string;
   icon: React.ReactNode;
-}
+};
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
@@ -49,6 +54,8 @@ const DashboardLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [profile, setProfile] = useState<any>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // プロフィール情報をロードする
   useEffect(() => {
@@ -85,7 +92,7 @@ const DashboardLayout = () => {
     logout();
   };
 
-  const menuItems: MenuItem[] = [
+  const menuItems: MenuItemType[] = [
     {
       text: 'ポートフォリオ管理',
       path: '/dashboard',
@@ -387,7 +394,7 @@ const DashboardLayout = () => {
               }
             }}
           >
-            <MenuItem onClick={() => {
+            <MuiMenuItem onClick={() => {
               handleProfileMenuClose();
               navigate('/dashboard/profile');
             }}>
@@ -395,14 +402,14 @@ const DashboardLayout = () => {
                 <PersonIcon fontSize="small" />
               </ListItemIcon>
               プロフィール
-            </MenuItem>
+            </MuiMenuItem>
             <Divider />
-            <MenuItem onClick={handleLogout}>
+            <MuiMenuItem onClick={handleLogout}>
               <ListItemIcon>
                 <LogoutIcon fontSize="small" color="error" />
               </ListItemIcon>
               <Typography color="error">ログアウト</Typography>
-            </MenuItem>
+            </MuiMenuItem>
           </Menu>
         </Toolbar>
       </AppBar>
