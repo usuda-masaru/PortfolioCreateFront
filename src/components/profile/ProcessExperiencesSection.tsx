@@ -196,8 +196,6 @@ const ProcessExperiencesSection = ({ processExperiences }: ProcessExperiencesSec
               const hasExperience = exp.experience_count > 0;
               const processColor = getProcessColor(exp.process_type);
               const processColorLight = getProcessColor(exp.process_type, 'light');
-              const processColorDark = getProcessColor(exp.process_type, 'dark');
-              const colorIntensity = getColorIntensity(exp.experience_count);
               
               return (
                 <Grid item xs={6} sm={4} md={2} key={exp.id}>
@@ -396,7 +394,6 @@ const ProcessExperiencesSection = ({ processExperiences }: ProcessExperiencesSec
                 .map((exp) => {
                   const processColor = getProcessColor(exp.process_type);
                   const processColorLight = getProcessColor(exp.process_type, 'light');
-                  const processColorDark = getProcessColor(exp.process_type, 'dark');
                   
                   return (
                     <Grid item xs={12} sm={6} key={exp.id}>

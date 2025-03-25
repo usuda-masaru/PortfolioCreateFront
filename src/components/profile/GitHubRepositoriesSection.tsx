@@ -9,17 +9,13 @@ import {
   Button, 
   Chip,
   useTheme,
-  alpha,
-  Link
+  alpha
 } from '@mui/material';
 import { 
   GitHub as GitHubIcon,
   Star as StarIcon,
-  Code as CodeIcon,
   CallSplit as ForkIcon,
-  BugReport as IssueIcon,
-  Visibility as WatchIcon,
-  Link as LinkIcon
+  BugReport as IssueIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 

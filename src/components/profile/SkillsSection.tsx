@@ -5,7 +5,6 @@ import 'react-circular-progressbar/dist/styles.css';
 import { AccessTime as TimeIcon, Star as StarIcon, Code as CodeIcon } from '@mui/icons-material';
 import { Skill, ProcessExperience, SkillCategory } from '../../types/interfaces';
 import { Radar } from 'react-chartjs-2';
-import { API_BASE_URL } from '../../services/api';
 import {
   Chart as ChartJS,
   RadialLinearScale,
