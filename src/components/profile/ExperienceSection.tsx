@@ -6,8 +6,6 @@ import {
   useTheme,
   Chip,
   Grid,
-  Divider,
-  Tooltip,
   alpha
 } from '@mui/material';
 import { 
@@ -31,14 +29,14 @@ import {
 } from '@mui/icons-material';
 import { WorkExperience } from '../../types/interfaces';
 
-interface Skill {
-  id: number;
-  name: string;
-  category: number;
-  level: number;
-  experience_years: number;
-  order: number;
-}
+// interface Skill {
+//   id: number;
+//   name: string;
+//   category: number;
+//   level: number;
+//   experience_years: number;
+//   order: number;
+// }
 
 interface ExperienceSectionProps {
   experiences: WorkExperience[];
@@ -133,8 +131,8 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences }) =>
     <Box component="section">
       <Timeline position="right" sx={{ p: 0, mt: 0 }}>
         {sortedExperiences.map((exp) => {
-          const startDate = new Date(exp.start_date);
-          const endDate = exp.end_date ? new Date(exp.end_date) : null;
+          // const startDate = new Date(exp.start_date);
+          // const endDate = exp.end_date ? new Date(exp.end_date) : null;
           
           return (
             <TimelineItem key={exp.id}>

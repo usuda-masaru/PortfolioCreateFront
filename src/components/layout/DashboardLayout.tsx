@@ -36,7 +36,7 @@ import { profileAPI } from '../../services/api';
 
 const drawerWidth = 240;
 
-interface MenuItem {
+interface NavigationItem {
   text: string;
   path: string;
   icon: React.ReactNode;
@@ -54,7 +54,7 @@ const DashboardLayout = () => {
   // プロフィール情報をロードする
   useEffect(() => {
     const fetchProfile = async () => {
-      try {
+      try { 
         const profileData = await profileAPI.getMyProfile();
         console.log("Loaded profile:", profileData);
         setProfile(profileData);
@@ -88,7 +88,7 @@ const DashboardLayout = () => {
     logout();
   };
 
-  const menuItems: MenuItem[] = [
+  const menuItems: NavigationItem[] = [
     {
       text: 'ポートフォリオ管理',
       path: '/dashboard',
