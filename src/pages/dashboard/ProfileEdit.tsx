@@ -28,7 +28,7 @@ const ProfileEdit: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  // const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const theme = useTheme();
 
@@ -36,7 +36,7 @@ const ProfileEdit: React.FC = () => {
     fetchProfile();
     // コンポーネントがマウントされた状態を追跡
     setTimeout(() => {
-      setMounted(true);
+      // setMounted(true);
     }, 100);
   }, []);
 

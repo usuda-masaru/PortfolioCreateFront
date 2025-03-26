@@ -1,30 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect} from 'react';
 import { 
   Box, Typography, TextField, Button, Grid, Paper, 
-  CircularProgress, Alert, Divider, IconButton, MenuItem,
+  CircularProgress, Alert, IconButton, MenuItem,
   Select, FormControl, InputLabel, Card, CardContent, 
   Dialog, DialogTitle, DialogContent, DialogActions,
-  FormHelperText, Chip, Tooltip, Avatar, SelectChangeEvent,
-  InputAdornment, Tab, Tabs, Modal, TextField as MuiTextField,
-  Checkbox, FormControlLabel, List, ListItem, ListItemText,
-  ListItemButton
+  Chip, 
+  InputAdornment, Tab, Tabs,
+  Checkbox, FormControlLabel
 } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon, Error as ErrorIcon } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CategoryIcon from '@mui/icons-material/Category';
 import SearchIcon from '@mui/icons-material/Search';
 import EmojiSymbolsIcon from '@mui/icons-material/EmojiSymbols';
 import StarIcon from '@mui/icons-material/Star';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import { AccessTime as TimeIcon, Code as CodeIcon } from '@mui/icons-material';
 import { skillAPI } from '../../services/api';
-import { API_BASE_URL } from '../../services/api';
 import { Skill, SkillCategory } from '../../types/interfaces';
-import api from '../../services/api'; // 既にimportされている場合は無視
 import { alpha } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
 import {
@@ -244,22 +238,19 @@ const GridIconDisplay: React.FC<{ iconId: string }> = ({ iconId }) => {
 };
 
 // カテゴリにヘッダーデザインを追加するためのスタイル定義
-const CATEGORY_COLORS: Record<string, { bg: string; icon: string; color: string }> = {
-  'フロントエンド': { bg: 'rgba(33, 150, 243, 0.06)', icon: 'SiReact', color: '#1565c0' },
-  'バックエンド': { bg: 'rgba(76, 175, 80, 0.06)', icon: 'SiNodedotjs', color: '#2e7d32' },
-  'データベース': { bg: 'rgba(156, 39, 176, 0.06)', icon: 'SiPostgresql', color: '#7b1fa2' },
-  'プログラミング言語': { bg: 'rgba(255, 152, 0, 0.06)', icon: 'SiJavascript', color: '#e65100' },
-  'ツール': { bg: 'rgba(0, 150, 136, 0.06)', icon: 'SiGit', color: '#00695c' },
-  'ホスティング': { bg: 'rgba(3, 169, 244, 0.06)', icon: 'SiDocker', color: '#0277bd' },
-  'デザイン': { bg: 'rgba(244, 67, 54, 0.06)', icon: 'SiFigma', color: '#d32f2f' },
-  'OS/プラットフォーム': { bg: 'rgba(121, 85, 72, 0.06)', icon: 'SiLinux', color: '#5d4037' },
-  'モバイル': { bg: 'rgba(233, 30, 99, 0.06)', icon: 'SiAndroid', color: '#c2185b' },
-  'AWS': { bg: 'rgba(255, 193, 7, 0.06)', icon: 'FaAws', color: '#ff8f00' },
-};
+// const CATEGORY_COLORS: Record<string, { bg: string; icon: string; color: string }> = {
+//   'フロントエンド': { bg: 'rgba(33, 150, 243, 0.06)', icon: 'SiReact', color: '#1565c0' },
+//   'バックエンド': { bg: 'rgba(76, 175, 80, 0.06)', icon: 'SiNodedotjs', color: '#2e7d32' },
+//   'データベース': { bg: 'rgba(156, 39, 176, 0.06)', icon: 'SiPostgresql', color: '#7b1fa2' },
+//   'プログラミング言語': { bg: 'rgba(255, 152, 0, 0.06)', icon: 'SiJavascript', color: '#e65100' },
+//   'ツール': { bg: 'rgba(0, 150, 136, 0.06)', icon: 'SiGit', color: '#00695c' },
+//   'ホスティング': { bg: 'rgba(3, 169, 244, 0.06)', icon: 'SiDocker', color: '#0277bd' },
+//   'デザイン': { bg: 'rgba(244, 67, 54, 0.06)', icon: 'SiFigma', color: '#d32f2f' },
+//   'OS/プラットフォーム': { bg: 'rgba(121, 85, 72, 0.06)', icon: 'SiLinux', color: '#5d4037' },
+//   'モバイル': { bg: 'rgba(233, 30, 99, 0.06)', icon: 'SiAndroid', color: '#c2185b' },
+//   'AWS': { bg: 'rgba(255, 193, 7, 0.06)', icon: 'FaAws', color: '#ff8f00' },
+// };
 
-const getCategoryStyle = (categoryName: string): { bg: string; icon: string; color: string } => {
-  return CATEGORY_COLORS[categoryName] || { bg: 'rgba(97, 97, 97, 0.06)', icon: 'CategoryIcon', color: '#616161' };
-};
 
 const SkillsEdit: React.FC = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -279,15 +270,10 @@ const SkillsEdit: React.FC = () => {
   const [savingCategory, setSavingCategory] = useState<boolean>(false);
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
   const [iconDialogOpen, setIconDialogOpen] = useState<boolean>(false);
-  const [customIconUrl, setCustomIconUrl] = useState<string>('');
   const [iconSearchQuery, setIconSearchQuery] = useState<string>('');
-  const [uploadModalOpen, setUploadModalOpen] = useState<boolean>(false);
-  const [iconUploadFile, setIconUploadFile] = useState<File | null>(null);
-  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<boolean>(false);
   const [selectedIconCategory, setSelectedIconCategory] = useState<string>('all');
-  const [showCategoryDialog, setShowCategoryDialog] = useState<boolean>(false);
-  const [editingCategory, setEditingCategory] = useState<SkillCategory | null>(null);
+  // const [showCategoryDialog, setShowCategoryDialog] = useState<boolean>(false);
+  // const [editingCategory, setEditingCategory] = useState<SkillCategory | null>(null);
   const theme = useTheme();
 
   useEffect(() => {
@@ -764,8 +750,8 @@ const SkillsEdit: React.FC = () => {
                     <IconButton
                       size="small"
                       onClick={() => {
-                        setEditingCategory(selectedCategory);
-                        setShowCategoryDialog(true);
+                        // setEditingCategory(selectedCategory);
+                        // setShowCategoryDialog(true);
                       }}
                       sx={{ 
                         color: theme.palette.primary.main,

@@ -24,7 +24,6 @@ import {
   GitHub as GitHubIcon,
   Article as ArticleIcon
 } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
 import { UserProfile } from '../../types/interfaces';
 import { authAPI } from '../../services/api';
 

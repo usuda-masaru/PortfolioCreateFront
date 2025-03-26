@@ -2,21 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, Typography, TextField, Button, Grid, Paper, 
   CircularProgress, Alert, Divider, IconButton, Chip,
-  FormControl, InputLabel, Select, MenuItem, 
   Dialog, DialogTitle, DialogContent, DialogActions,
-  FormControlLabel, Checkbox, FormGroup,
-  Card, CardContent, CardActions
+  FormControlLabel, Checkbox,
+  Card, CardContent
 } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select';
+// import { SelectChangeEvent } from '@mui/material/Select';
 import { 
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Save as SaveIcon,
-  Cancel as CancelIcon,
   School as SchoolIcon
 } from '@mui/icons-material';
-import { format, parse } from 'date-fns';
+import { format} from 'date-fns';
 import { useTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 
@@ -68,13 +66,13 @@ const EducationDialog: React.FC<{
     }));
   };
 
-  const handleSelectChange = (e: SelectChangeEvent<string>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  // const handleSelectChange = (e: SelectChangeEvent<string>) => {
+  //   const { name, value } = e.target;
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     [name]: value
+  //   }));
+  // };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
@@ -381,7 +379,7 @@ const EducationEdit: React.FC = () => {
   const [currentEducation, setCurrentEducation] = useState<Partial<Education>>(emptyEducation);
   const [isNewEducation, setIsNewEducation] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const theme = useTheme();
+  // const theme = useTheme();
 
   // 学歴データの取得
   const fetchEducation = async () => {
@@ -436,14 +434,14 @@ const EducationEdit: React.FC = () => {
     try {
       setError(null);
       
-      let savedEducation;
+      // let savedEducation;
       if (isNewEducation) {
         // 新規作成
-        savedEducation = await educationAPI.createEducation(data);
+        await educationAPI.createEducation(data);
         setSuccessMessage('学歴情報を新規登録しました。');
       } else {
         // 更新
-        savedEducation = await educationAPI.updateEducation(data);
+        await educationAPI.updateEducation(data);
         setSuccessMessage('学歴情報を更新しました。');
       }
       

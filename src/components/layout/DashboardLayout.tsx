@@ -49,7 +49,7 @@ const DashboardLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
 
   // プロフィール情報をロードする
   useEffect(() => {
@@ -61,7 +61,7 @@ const DashboardLayout = () => {
       } catch (error) {
         console.error("Failed to load profile:", error);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
     
