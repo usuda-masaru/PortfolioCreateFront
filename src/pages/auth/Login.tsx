@@ -11,7 +11,6 @@ import {
   alpha,
   InputAdornment,
   IconButton,
-  useMediaQuery,
   Link
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
@@ -25,7 +24,6 @@ const Login: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   const { login, loading, error, clearErrors } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     setMounted(true);

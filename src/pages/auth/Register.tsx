@@ -10,8 +10,7 @@ import {
   useTheme,
   alpha,
   InputAdornment,
-  IconButton,
-  useMediaQuery
+  IconButton
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -35,7 +34,6 @@ const Register: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { register, loading } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
   useEffect(() => {

@@ -9,17 +9,13 @@ import {
   Button, 
   Chip,
   useTheme,
-  alpha,
-  Link
+  alpha
 } from '@mui/material';
 import { 
   GitHub as GitHubIcon,
   Star as StarIcon,
-  Code as CodeIcon,
   CallSplit as ForkIcon,
   BugReport as IssueIcon,
-  Visibility as WatchIcon,
-  Link as LinkIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
@@ -50,7 +46,7 @@ interface GitHubRepositoriesSectionProps {
 const MotionCard = motion(Card);
 
 const GitHubRepositoriesSection: React.FC<GitHubRepositoriesSectionProps> = ({ repositories }) => {
-  const theme = useTheme();
+  // const theme = useTheme();
   
   if (!repositories || repositories.length === 0) {
     return (

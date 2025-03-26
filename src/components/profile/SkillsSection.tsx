@@ -1,11 +1,10 @@
 import React from 'react';
-import { Box, Typography, Tooltip, alpha, useTheme, Paper, Grid } from '@mui/material';
+import { Box, Typography, Tooltip, alpha, useTheme} from '@mui/material';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import { AccessTime as TimeIcon, Star as StarIcon, Code as CodeIcon } from '@mui/icons-material';
-import { Skill, ProcessExperience, SkillCategory } from '../../types/interfaces';
-import { Radar } from 'react-chartjs-2';
-import { API_BASE_URL } from '../../services/api';
+import { AccessTime as TimeIcon, Star as StarIcon } from '@mui/icons-material';
+import { Skill, SkillCategory } from '../../types/interfaces';
+
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -165,122 +164,62 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills }) => {
     return Object.values(grouped).sort((a, b) => a.id - b.id);
   }, [skills]);
   
-  const renderExperienceStars = (years: number) => {
-    // 経験年数に応じた色の決定
-    const getColorByYears = (years: number) => {
-      if (years >= 5) {
-        return {
-          bg: alpha(theme.palette.warning.main, 0.15),
-          color: theme.palette.warning.dark,
-          label: '熟練'
-        };
-      } else if (years >= 3) {
-        return {
-          bg: alpha(theme.palette.success.main, 0.15),
-          color: theme.palette.success.dark,
-          label: '経験豊富'
-        };
-      } else {
-        return {
-          bg: alpha(theme.palette.primary.main, 0.1),
-          color: theme.palette.primary.main,
-          label: ''
-        };
-      }
-    };
+  // const renderExperienceStars = (years: number) => {
+  //   // 経験年数に応じた色の決定
+  //   const getColorByYears = (years: number) => {
+  //     if (years >= 5) {
+  //       return {
+  //         bg: alpha(theme.palette.warning.main, 0.15),
+  //         color: theme.palette.warning.dark,
+  //         label: '熟練'
+  //       };
+  //     } else if (years >= 3) {
+  //       return {
+  //         bg: alpha(theme.palette.success.main, 0.15),
+  //         color: theme.palette.success.dark,
+  //         label: '経験豊富'
+  //       };
+  //     } else {
+  //       return {
+  //         bg: alpha(theme.palette.primary.main, 0.1),
+  //         color: theme.palette.primary.main,
+  //         label: ''
+  //       };
+  //     }
+  //   };
 
-    const colorConfig = getColorByYears(years);
+  //   const colorConfig = getColorByYears(years);
 
-    return (
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            bgcolor: colorConfig.bg,
-            color: colorConfig.color,
-            borderRadius: '16px',
-            px: 1.5,
-            py: 0.5
-          }}
-        >
-          <TimeIcon fontSize="small" sx={{ mr: 0.5, fontSize: '0.85rem' }} />
-          <Typography 
-            variant="caption" 
-            sx={{ 
-              lineHeight: 1,
-              fontWeight: 'medium'
-            }}
-          >
-            {years}年{colorConfig.label && ` (${colorConfig.label})`}
-          </Typography>
-        </Box>
-      </Box>
-    );
-  };
+  //   return (
+  //     <Box sx={{ display: 'flex', alignItems: 'center' }}>
+  //       <Box 
+  //         sx={{ 
+  //           display: 'flex', 
+  //           alignItems: 'center', 
+  //           justifyContent: 'center',
+  //           bgcolor: colorConfig.bg,
+  //           color: colorConfig.color,
+  //           borderRadius: '16px',
+  //           px: 1.5,
+  //           py: 0.5
+  //         }}
+  //       >
+  //         <TimeIcon fontSize="small" sx={{ mr: 0.5, fontSize: '0.85rem' }} />
+  //         <Typography 
+  //           variant="caption" 
+  //           sx={{ 
+  //             lineHeight: 1,
+  //             fontWeight: 'medium'
+  //           }}
+  //         >
+  //           {years}年{colorConfig.label && ` (${colorConfig.label})`}
+  //         </Typography>
+  //       </Box>
+  //     </Box>
+  //   );
+  // };
 
   // レーダーチャートのオプションを改善
-  const chartOptions = {
-    scales: {
-      r: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1,
-          backdropColor: 'transparent',
-          color: theme.palette.text.secondary,
-          font: {
-            size: 10
-          }
-        },
-        angleLines: {
-          color: alpha(theme.palette.divider, 0.3)
-        },
-        grid: {
-          color: alpha(theme.palette.divider, 0.2)
-        },
-        pointLabels: {
-          color: theme.palette.text.primary,
-          font: {
-            size: 11,
-            weight: 500
-          }
-        }
-      }
-    },
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: {
-        backgroundColor: alpha(theme.palette.background.paper, 0.95),
-        titleColor: theme.palette.text.primary,
-        bodyColor: theme.palette.text.secondary,
-        borderColor: theme.palette.divider,
-        borderWidth: 1,
-        padding: 12,
-        bodyFont: {
-          size: 12
-        },
-        titleFont: {
-          size: 13,
-          weight: "bold" as const
-        }
-      }
-    },
-    maintainAspectRatio: false,
-    elements: {
-      line: {
-        borderWidth: 2,
-        tension: 0.3
-      },
-      point: {
-        radius: 4,
-        hoverRadius: 6,
-        borderWidth: 2
-      }
-    }
-  };
   
   return (
     <Box sx={{ py: 4 }}>

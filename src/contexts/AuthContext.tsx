@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect} from 'react';
 import { User, AuthState } from '../types/interfaces';
 import { authAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -30,9 +30,7 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // コンテキストプロバイダーの作成
-interface AuthProviderProps {
-  children: ReactNode;
-}
+
 
 interface RegisterResponse {
   token: string;

@@ -140,12 +140,12 @@ const ProcessExperiencesSection = ({ processExperiences }: ProcessExperiencesSec
   };
 
   // 色の濃さを経験数に応じて計算
-  const getColorIntensity = (count: number) => {
-    if (count === 0) return 0.1;
-    const normalized = count / maxExperienceCount;
-    // 最低でも0.2の濃さにする
-    return 0.2 + (normalized * 0.8);
-  };
+  // const getColorIntensity = (count: number) => {
+  //   if (count === 0) return 0.1;
+  //   const normalized = count / maxExperienceCount;
+  //   // 最低でも0.2の濃さにする
+  //   return 0.2 + (normalized * 0.8);
+  // };
 
   return (
     <Box sx={{ py: 3 }}>
@@ -196,8 +196,7 @@ const ProcessExperiencesSection = ({ processExperiences }: ProcessExperiencesSec
               const hasExperience = exp.experience_count > 0;
               const processColor = getProcessColor(exp.process_type);
               const processColorLight = getProcessColor(exp.process_type, 'light');
-              const processColorDark = getProcessColor(exp.process_type, 'dark');
-              const colorIntensity = getColorIntensity(exp.experience_count);
+
               
               return (
                 <Grid item xs={6} sm={4} md={2} key={exp.id}>
@@ -394,9 +393,7 @@ const ProcessExperiencesSection = ({ processExperiences }: ProcessExperiencesSec
               {normalizedProcessData
                 .filter(exp => exp.experience_count > 0)
                 .map((exp) => {
-                  const processColor = getProcessColor(exp.process_type);
-                  const processColorLight = getProcessColor(exp.process_type, 'light');
-                  const processColorDark = getProcessColor(exp.process_type, 'dark');
+                  const processColor = getProcessColor(exp.process_type); 
                   
                   return (
                     <Grid item xs={12} sm={6} key={exp.id}>
