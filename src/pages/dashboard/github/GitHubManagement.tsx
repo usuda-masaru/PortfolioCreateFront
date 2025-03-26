@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Box, Typography, Button, Paper, Grid, Chip, 
   Card, CardContent,
@@ -143,8 +143,8 @@ const GitHubManagement: React.FC = () => {
     setOpenSettings(false);
   };
   
-  // リポジトリデータを取得
-  const fetchRepositories = async () => {
+  // リポジトリデータを取得（useCallbackでメモ化）
+  const fetchRepositories = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -173,7 +173,67 @@ const GitHubManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showPrivate]);
+  
+  // useEffectはそのまま
+  useEffect(() => {
+    fetchRepositories();
+    
+    // URLパラメータをチェック（OAuth認証後のリダイレクト時）
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('success') === 'true') {
+      setSuccess('GitHub連携が完了しました！リポジトリを同期してください。');
+      setTimeout(() => setSuccess(null), 5000);
+    } else if (searchParams.get('error')) {
+      const errorType = searchParams.get('error');
+      let errorMessage = 'GitHub連携中にエラーが発生しました。';
+      
+      switch (errorType) {
+        case 'no_code':
+          errorMessage = '認証コードが取得できませんでした。';
+          break;
+        case 'token_error':
+          errorMessage = 'アクセストークンの取得に失敗しました。Client IDとClient Secretを確認してください。';
+          break;
+        case 'no_token':
+          errorMessage = 'アクセストークンが取得できませんでした。';
+          break;
+        case 'invalid_user':
+        case 'no_user':
+          errorMessage = 'ユーザー情報の取得に失敗しました。';
+          break;
+      }
+      
+      setError(errorMessage);
+    }
+  }, [fetchRepositories]);
+  
+  // プライベートリポジトリの表示設定が変わったら再取得
+  useEffect(() => {
+    fetchRepositories();
+  }, [fetchRepositories]);
+  
+  // 言語ごとの色を取得
+  // const getLanguageColor = (language: string): string => {
+  //   const colors: Record<string, string> = {
+  //     JavaScript: '#f1e05a',
+  //     TypeScript: '#2b7489',
+  //     Python: '#3572A5',
+  //     Java: '#b07219',
+  //     'C#': '#178600',
+  //     PHP: '#4F5D95',
+  //     CSS: '#563d7c',
+  //     HTML: '#e34c26',
+  //     Ruby: '#701516',
+  //     Go: '#00ADD8',
+  //     Rust: '#dea584',
+  //     Swift: '#ffac45',
+  //     Kotlin: '#F18E33',
+  //     Dart: '#00B4AB',
+  //   };
+    
+  //   return colors[language] || '#8257e5'; // デフォルト色
+  // };
   
   // GitHub連携ログイン
   const handleConnectGithub = () => {
@@ -229,66 +289,6 @@ const GitHubManagement: React.FC = () => {
       setError('リポジトリの特集フラグ切り替えに失敗しました。');
     }
   };
-  
-  // 初回表示時にリポジトリを取得
-  useEffect(() => {
-    fetchRepositories();
-    
-    // URLパラメータをチェック（OAuth認証後のリダイレクト時）
-    const searchParams = new URLSearchParams(window.location.search);
-    if (searchParams.get('success') === 'true') {
-      setSuccess('GitHub連携が完了しました！リポジトリを同期してください。');
-      setTimeout(() => setSuccess(null), 5000);
-    } else if (searchParams.get('error')) {
-      const errorType = searchParams.get('error');
-      let errorMessage = 'GitHub連携中にエラーが発生しました。';
-      
-      switch (errorType) {
-        case 'no_code':
-          errorMessage = '認証コードが取得できませんでした。';
-          break;
-        case 'token_error':
-          errorMessage = 'アクセストークンの取得に失敗しました。Client IDとClient Secretを確認してください。';
-          break;
-        case 'no_token':
-          errorMessage = 'アクセストークンが取得できませんでした。';
-          break;
-        case 'invalid_user':
-        case 'no_user':
-          errorMessage = 'ユーザー情報の取得に失敗しました。';
-          break;
-      }
-      
-      setError(errorMessage);
-    }
-  }, []);
-  
-  // プライベートリポジトリの表示設定が変わったら再取得
-  useEffect(() => {
-    fetchRepositories();
-  }, [showPrivate]);
-  
-  // 言語ごとの色を取得
-  // const getLanguageColor = (language: string): string => {
-  //   const colors: Record<string, string> = {
-  //     JavaScript: '#f1e05a',
-  //     TypeScript: '#2b7489',
-  //     Python: '#3572A5',
-  //     Java: '#b07219',
-  //     'C#': '#178600',
-  //     PHP: '#4F5D95',
-  //     CSS: '#563d7c',
-  //     HTML: '#e34c26',
-  //     Ruby: '#701516',
-  //     Go: '#00ADD8',
-  //     Rust: '#dea584',
-  //     Swift: '#ffac45',
-  //     Kotlin: '#F18E33',
-  //     Dart: '#00B4AB',
-  //   };
-    
-  //   return colors[language] || '#8257e5'; // デフォルト色
-  // };
   
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto' }}>

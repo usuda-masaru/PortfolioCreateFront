@@ -127,19 +127,8 @@ export const authAPI = {
     }
   },
   logout: async () => {
-    try {
-      // トークンが無効になるようにバックエンドに通知
-      // Djangoではトークンの無効化エンドポイントが必要です
-      // エンドポイントが存在する場合は以下のコメントを外してください
-      // await api.post('/api/logout/');
-      
-      // ログアウト処理はフロントエンド側でも行う
-      return { success: true };
-    } catch (error) {
-      console.error('Logout error:', error);
-      // バックエンドでエラーが発生しても、フロントエンドでは正常にログアウト処理を続行
-      return { success: true };
-    }
+    return { success: true };
+    // ログアウト処理を作成する必要あり
   },
   getMyProfile: async () => {
     try {

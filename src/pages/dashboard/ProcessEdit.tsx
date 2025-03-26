@@ -6,7 +6,6 @@ import {
   TextField, 
   Button, 
   Grid, 
-  Divider, 
   CircularProgress, 
   Alert,
   Avatar,
@@ -278,7 +277,6 @@ const ProcessEdit: React.FC = () => {
           {PROCESS_TYPES.map((type, index) => {
             const experience = experiences[index];
             const processColor = PROCESS_COLORS[type.value]?.main || theme.palette.primary.main;
-            const processColorLight = PROCESS_COLORS[type.value]?.light || theme.palette.primary.light;
 
             return (
               <Paper

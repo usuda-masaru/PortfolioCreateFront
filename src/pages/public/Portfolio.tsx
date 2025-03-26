@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
   Box, Container, Typography, CircularProgress, Alert, 
@@ -70,22 +70,15 @@ const Portfolio: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const theme = useTheme();
 
-  useEffect(() => {
-    console.log('Portfolio component mounted, portfolio_slug:', portfolio_slug);
-    fetchProfile();
-  }, [portfolio_slug]);
-
-  // プロフィールデータの取得
-  const fetchProfile = async () => {
+  // fetchProfileをuseCallbackでメモ化
+  const fetchProfile = useCallback(async () => {
     setLoading(true);
     try {
       console.log('Fetching profile for portfolio_slug:', portfolio_slug);
       
-      // まず自分のプロフィールを取得して、それを公開プロフィールとして表示
       const myProfile = await profileAPI.getMyProfile();
       console.log('My profile data:', myProfile);
       
-      // PublicProfileの形式に変換
       const publicProfile: PublicProfile = {
         ...myProfile,
         display_name: myProfile.display_name,
@@ -136,7 +129,12 @@ const Portfolio: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [portfolio_slug]);
+
+  useEffect(() => {
+    console.log('Portfolio component mounted, portfolio_slug:', portfolio_slug);
+    fetchProfile();
+  }, [portfolio_slug, fetchProfile]);
 
   if (loading) {
     return (
