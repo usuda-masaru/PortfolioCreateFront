@@ -17,7 +17,7 @@ import {
   Button,
   Avatar,
   Menu,
-  MenuItem as MuiMenuItem,
+  MenuItem,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -36,11 +36,11 @@ import { profileAPI } from '../../services/api';
 
 const drawerWidth = 240;
 
-type MenuItemType = {
+interface MenuItem {
   text: string;
   path: string;
   icon: React.ReactNode;
-};
+}
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
@@ -49,7 +49,7 @@ const DashboardLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [profile, setProfile] = useState<any>(null);
-  // const theme = useTheme();
+  const [loading, setLoading] = useState(true);
 
   // プロフィール情報をロードする
   useEffect(() => {
@@ -60,6 +60,8 @@ const DashboardLayout = () => {
         setProfile(profileData);
       } catch (error) {
         console.error("Failed to load profile:", error);
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -86,7 +88,7 @@ const DashboardLayout = () => {
     logout();
   };
 
-  const menuItems: MenuItemType[] = [
+  const menuItems: MenuItem[] = [
     {
       text: 'ポートフォリオ管理',
       path: '/dashboard',
@@ -388,7 +390,7 @@ const DashboardLayout = () => {
               }
             }}
           >
-            <MuiMenuItem onClick={() => {
+            <MenuItem onClick={() => {
               handleProfileMenuClose();
               navigate('/dashboard/profile');
             }}>
@@ -396,14 +398,14 @@ const DashboardLayout = () => {
                 <PersonIcon fontSize="small" />
               </ListItemIcon>
               プロフィール
-            </MuiMenuItem>
+            </MenuItem>
             <Divider />
-            <MuiMenuItem onClick={handleLogout}>
+            <MenuItem onClick={handleLogout}>
               <ListItemIcon>
                 <LogoutIcon fontSize="small" color="error" />
               </ListItemIcon>
               <Typography color="error">ログアウト</Typography>
-            </MuiMenuItem>
+            </MenuItem>
           </Menu>
         </Toolbar>
       </AppBar>

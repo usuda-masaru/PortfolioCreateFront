@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { 
   TextField, 
   Button, 
@@ -11,24 +10,33 @@ import {
   useTheme,
   alpha,
   InputAdornment,
-  IconButton
+  IconButton,
+  useMediaQuery
 } from '@mui/material';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Person as PersonIcon, Lock as LockIcon, Email as EmailIcon, ArrowBack, Visibility, VisibilityOff } from '@mui/icons-material';
+import { 
+  Person as PersonIcon, 
+  Lock as LockIcon, 
+  Email as EmailIcon,
+  Visibility, 
+  VisibilityOff,
+  ArrowBack as ArrowBackIcon 
+} from '@mui/icons-material';
 
 const Register: React.FC = () => {
-  const navigate = useNavigate();
-  const { register, error, loading } = useAuth();
-  const theme = useTheme();
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { register, loading } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate();
 
   useEffect(() => {
     setMounted(true);
@@ -36,28 +44,32 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     // バリデーション
-    if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!username || !email || !password || !confirmPassword) {
+      setError('すべての項目を入力してください');
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (password !== confirmPassword) {
+      setError('パスワードが一致していません');
       return;
     }
 
     // メールアドレスの簡易バリデーション
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
+    if (!emailRegex.test(email)) {
+      setError('有効なメールアドレスを入力してください');
       return;
     }
 
     try {
-      await register(formData.username, formData.email, formData.password);
+      await register(username, email, password);
       // 登録成功時にログインページへリダイレクト
       navigate('/login', { state: { message: '登録が完了しました。ログインしてください。' } });
     } catch (err) {
-      console.error('登録に失敗しました。もう一度お試しください。', err);
+      setError('登録に失敗しました。もう一度お試しください。');
     }
   };
 
@@ -191,7 +203,7 @@ const Register: React.FC = () => {
                 marginRight: '10px'
               }}
             >
-              <ArrowBack fontSize="small" />
+              <ArrowBackIcon fontSize="small" />
             </RouterLink>
             <Typography 
               variant="h4" 
@@ -246,8 +258,8 @@ const Register: React.FC = () => {
               name="username"
               autoComplete="username"
               autoFocus
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               disabled={loading}
               InputProps={{
                 startAdornment: (
@@ -274,8 +286,8 @@ const Register: React.FC = () => {
               name="email"
               autoComplete="email"
               type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
               InputProps={{
                 startAdornment: (
@@ -302,8 +314,8 @@ const Register: React.FC = () => {
               type={showPassword ? 'text' : 'password'}
               id="password"
               autoComplete="new-password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
               InputProps={{
                 startAdornment: (
@@ -341,8 +353,8 @@ const Register: React.FC = () => {
               type={showConfirmPassword ? 'text' : 'password'}
               id="confirmPassword"
               autoComplete="new-password"
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               disabled={loading}
               InputProps={{
                 startAdornment: (

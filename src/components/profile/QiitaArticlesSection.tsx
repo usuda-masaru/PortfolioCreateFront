@@ -9,6 +9,7 @@ import {
   Chip,
   Grid,
   Link,
+  Paper,
   Avatar,
   alpha,
   useTheme

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
 import { 
   TextField, 
   Button, 
@@ -12,20 +11,21 @@ import {
   alpha,
   InputAdornment,
   IconButton,
+  useMediaQuery,
   Link
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Person as PersonIcon, Lock as LockIcon, Visibility, VisibilityOff, PersonAddAlt, HelpOutline } from '@mui/icons-material';
 
-const Login = () => {
-  const { login, error, loading } = useAuth();
-  const theme = useTheme();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+const Login: React.FC = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { login, loading, error, clearErrors } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     setMounted(true);
@@ -33,7 +33,7 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(formData.email, formData.password);
+    await login(username, password);
   };
 
   const handleTogglePasswordVisibility = () => {
@@ -204,6 +204,7 @@ const Login = () => {
                   '20%, 40%, 60%, 80%': { transform: 'translateX(5px)' }
                 }
               }} 
+              onClose={clearErrors}
             >
               {error}
             </Alert>
@@ -223,13 +224,13 @@ const Login = () => {
               margin="normal"
               required
               fullWidth
-              id="email"
+              id="username"
               label="ユーザー名"
-              name="email"
+              name="username"
               autoComplete="username"
               autoFocus
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               disabled={loading}
               InputProps={{
                 startAdornment: (
@@ -257,8 +258,8 @@ const Login = () => {
               type={showPassword ? 'text' : 'password'}
               id="password"
               autoComplete="current-password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
               InputProps={{
                 startAdornment: (

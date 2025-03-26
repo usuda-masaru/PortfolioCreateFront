@@ -1,7 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider} from './contexts/AuthContext';
 
 // コンポーネント
 import Login from './pages/auth/Login';

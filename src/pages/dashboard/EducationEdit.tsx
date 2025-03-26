@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Box, Typography, TextField, Button, Grid, Paper, 
-  CircularProgress, Alert, Divider, IconButton,
-  FormControlLabel, Checkbox,
+  CircularProgress, Alert, Divider, IconButton, Chip,
+  FormControl, InputLabel, Select, MenuItem, 
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Card, CardContent,
-  useTheme,
-  alpha,
-  Chip
+  FormControlLabel, Checkbox, FormGroup,
+  Card, CardContent, CardActions
 } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
 import { 
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Save as SaveIcon,
+  Cancel as CancelIcon,
   School as SchoolIcon
 } from '@mui/icons-material';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 
 import { educationAPI } from '../../services/api';
 import { Education } from '../../types/interfaces';
@@ -59,6 +61,14 @@ const EducationDialog: React.FC<{
   }, [education]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent<string>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -364,13 +374,14 @@ const EducationItem: React.FC<{
 
 // メインコンポーネント
 const EducationEdit: React.FC = () => {
-  const [educationList, setEducationList] = useState<Education[]>([]);
+  const [education, setEducation] = useState<Education[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [currentEducation, setCurrentEducation] = useState<Partial<Education>>(emptyEducation);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [isNew, setIsNew] = useState(true);
+  const [currentEducation, setCurrentEducation] = useState<Partial<Education>>(emptyEducation);
+  const [isNewEducation, setIsNewEducation] = useState(true);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const theme = useTheme();
 
   // 学歴データの取得
   const fetchEducation = async () => {
@@ -387,7 +398,7 @@ const EducationEdit: React.FC = () => {
         return new Date(b.end_date).getTime() - new Date(a.end_date).getTime();
       });
       
-      setEducationList(sortedData);
+      setEducation(sortedData);
     } catch (err) {
       console.error('学歴データの取得に失敗しました', err);
       setError('学歴データの取得に失敗しました。再読み込みしてください。');
@@ -404,14 +415,14 @@ const EducationEdit: React.FC = () => {
   // 新規作成ダイアログを開く
   const handleOpenCreateDialog = () => {
     setCurrentEducation(emptyEducation);
-    setIsNew(true);
+    setIsNewEducation(true);
     setDialogOpen(true);
   };
 
   // 編集ダイアログを開く
   const handleOpenEditDialog = (educationItem: Education) => {
     setCurrentEducation(educationItem);
-    setIsNew(false);
+    setIsNewEducation(false);
     setDialogOpen(true);
   };
 
@@ -424,21 +435,21 @@ const EducationEdit: React.FC = () => {
   const handleSaveEducation = async (data: Partial<Education>) => {
     try {
       setError(null);
-      let savedEducation: Education;
       
-      if (isNew) {
+      let savedEducation;
+      if (isNewEducation) {
         // 新規作成
         savedEducation = await educationAPI.createEducation(data);
-        setSuccess('学歴情報を新規登録しました。');
+        setSuccessMessage('学歴情報を新規登録しました。');
       } else {
         // 更新
         savedEducation = await educationAPI.updateEducation(data);
-        setSuccess('学歴情報を更新しました。');
+        setSuccessMessage('学歴情報を更新しました。');
       }
       
       // 成功メッセージを表示して3秒後に消す
       setTimeout(() => {
-        setSuccess(null);
+        setSuccessMessage(null);
       }, 3000);
       
       // データを再取得
@@ -463,11 +474,11 @@ const EducationEdit: React.FC = () => {
       await educationAPI.deleteEducation(id);
       
       // 成功メッセージを表示
-      setSuccess('学歴情報を削除しました。');
+      setSuccessMessage('学歴情報を削除しました。');
       
       // 成功メッセージを3秒後に消す
       setTimeout(() => {
-        setSuccess(null);
+        setSuccessMessage(null);
       }, 3000);
       
       // データを再取得
@@ -536,9 +547,9 @@ const EducationEdit: React.FC = () => {
         </Alert>
       )}
       
-      {success && (
+      {successMessage && (
         <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
-          {success}
+          {successMessage}
         </Alert>
       )}
 
@@ -546,7 +557,7 @@ const EducationEdit: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
         </Box>
-      ) : educationList.length === 0 ? (
+      ) : education.length === 0 ? (
         <Paper 
           sx={{ 
             p: 4, 
@@ -576,7 +587,7 @@ const EducationEdit: React.FC = () => {
         </Paper>
       ) : (
         <Box>
-          {educationList.map((edu) => (
+          {education.map((edu) => (
             <EducationItem
               key={edu.id}
               education={edu}
@@ -592,7 +603,7 @@ const EducationEdit: React.FC = () => {
         onClose={handleCloseDialog}
         education={currentEducation}
         onSave={handleSaveEducation}
-        isNew={isNew}
+        isNew={isNewEducation}
       />
     </Box>
   );
