@@ -1,17 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Box, Typography, TextField, Button, Grid, Paper, 
-  CircularProgress, Alert, Divider, Card, CardContent,
+  CircularProgress, Alert,
   Avatar, IconButton, useTheme, alpha, Chip, Tooltip,
-  Container, InputAdornment, Fade, Grow
+  Container, InputAdornment
 } from '@mui/material';
 import { 
   PhotoCamera as PhotoCameraIcon,
   Person as PersonIcon,
-  Work as WorkIcon,
   TextSnippet as TextSnippetIcon,
   LocalOffer as LocalOfferIcon,
-  LocationOn as LocationOnIcon,
   Email as EmailIcon,
   GitHub as GitHubIcon,
   Language as LanguageIcon,
