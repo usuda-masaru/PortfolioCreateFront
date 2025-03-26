@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
   Box, Container, Typography, CircularProgress, Alert, 
-  Paper, useTheme, alpha, Chip
+  Paper, useTheme, alpha
 } from '@mui/material';
 import { PublicProfile } from '../../types/interfaces';
 import { profileAPI } from '../../services/api';

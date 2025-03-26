@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Box, Typography, Button, Paper, Grid, Chip, Divider, 
-  Card, CardContent, CardActions, CardHeader, CardMedia,
+  Box, Typography, Button, Paper, Grid, Chip, 
+  Card, CardContent,
   IconButton, Alert, CircularProgress, Link, Switch, 
   FormControlLabel, Tooltip, TextField, Dialog, DialogActions,
   DialogContent, DialogContentText, DialogTitle, Grow
@@ -10,11 +10,8 @@ import {
   Sync as SyncIcon,
   GitHub as GitHubIcon,
   Star as StarIcon,
-  Code as CodeIcon,
   CallSplit as ForkIcon,
   BugReport as IssueIcon,
-  Visibility as WatchIcon,
-  Link as LinkIcon,
   Star as StarredIcon,
   StarBorder as UnstarredIcon,
   Settings as SettingsIcon,
@@ -45,17 +42,16 @@ interface GitHubRepository {
   is_private: boolean;
 }
 
-interface GitHubCommitStats {
-  commit_count_total: number;
-  commit_count_last_year: number;
-  contributions_by_month: Record<string, number>;
-  languages_used: Record<string, number>;
-  last_updated: string;
-}
+// interface GitHubCommitStats {
+//   commit_count_total: number;
+//   commit_count_last_year: number;
+//   contributions_by_month: Record<string, number>;
+//   languages_used: Record<string, number>;
+//   last_updated: string;
+// }
 
 const GitHubManagement: React.FC = () => {
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
-  const [stats, setStats] = useState<GitHubCommitStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -273,26 +269,26 @@ const GitHubManagement: React.FC = () => {
   }, [showPrivate]);
   
   // 言語ごとの色を取得
-  const getLanguageColor = (language: string): string => {
-    const colors: Record<string, string> = {
-      JavaScript: '#f1e05a',
-      TypeScript: '#2b7489',
-      Python: '#3572A5',
-      Java: '#b07219',
-      'C#': '#178600',
-      PHP: '#4F5D95',
-      CSS: '#563d7c',
-      HTML: '#e34c26',
-      Ruby: '#701516',
-      Go: '#00ADD8',
-      Rust: '#dea584',
-      Swift: '#ffac45',
-      Kotlin: '#F18E33',
-      Dart: '#00B4AB',
-    };
+  // const getLanguageColor = (language: string): string => {
+  //   const colors: Record<string, string> = {
+  //     JavaScript: '#f1e05a',
+  //     TypeScript: '#2b7489',
+  //     Python: '#3572A5',
+  //     Java: '#b07219',
+  //     'C#': '#178600',
+  //     PHP: '#4F5D95',
+  //     CSS: '#563d7c',
+  //     HTML: '#e34c26',
+  //     Ruby: '#701516',
+  //     Go: '#00ADD8',
+  //     Rust: '#dea584',
+  //     Swift: '#ffac45',
+  //     Kotlin: '#F18E33',
+  //     Dart: '#00B4AB',
+  //   };
     
-    return colors[language] || '#8257e5'; // デフォルト色
-  };
+  //   return colors[language] || '#8257e5'; // デフォルト色
+  // };
   
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto' }}>

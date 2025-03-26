@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, Typography, TextField, Button, Grid, Paper, 
   CircularProgress, Alert, Divider, IconButton, Chip,
-  FormControl, InputLabel, Select, MenuItem, 
+  FormControl,
   Dialog, DialogTitle, DialogContent, DialogActions,
   FormControlLabel, Checkbox, FormGroup, FormLabel, 
-  Autocomplete, Stack, Card, CardContent, CardActions,
-  TableContainer, Table, TableHead, TableBody, TableRow, TableCell,
-  Collapse, Tooltip
+  Card, CardContent, 
+  Collapse
 } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select';
+// import { SelectChangeEvent } from '@mui/material/Select';
 import { 
   Add as AddIcon,
   Edit as EditIcon,
@@ -21,17 +20,15 @@ import {
   Business as BusinessIcon,
   Timeline as TimelineIcon,
   Group as GroupIcon,
-  Assignment as AssignmentIcon,
   Code as CodeIcon,
   Storage as StorageIcon,
   Work as WorkIcon
 } from '@mui/icons-material';
-import { format, parse } from 'date-fns';
 import { useTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 
-import { workExperienceAPI, skillAPI } from '../../services/api';
-import { WorkExperience, Skill } from '../../types/interfaces';
+import { workExperienceAPI} from '../../services/api';
+import { WorkExperience} from '../../types/interfaces';
 
 // プロセス種別の選択肢
 const PROCESS_TYPES = [
@@ -91,60 +88,60 @@ const emptyWorkExperience: Partial<WorkExperience> = {
 };
 
 // スキル選択コンポーネント
-const SkillSelector: React.FC<{
-  selectedSkills: Skill[];
-  onSkillsChange: (skills: Skill[]) => void;
-}> = ({ selectedSkills, onSkillsChange }) => {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [loading, setLoading] = useState(true);
+// const SkillSelector: React.FC<{
+//   selectedSkills: Skill[];
+//   onSkillsChange: (skills: Skill[]) => void;
+// }> = ({ selectedSkills, onSkillsChange }) => {
+//   const [skills, setSkills] = useState<Skill[]>([]);
+//   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchSkills = async () => {
-      try {
-        setLoading(true);
-        const fetchedSkills = await skillAPI.getSkills();
-        setSkills(fetchedSkills);
-      } catch (error) {
-        console.error('スキル取得エラー:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+//   useEffect(() => {
+//     const fetchSkills = async () => {
+//       try {
+//         setLoading(true);
+//         const fetchedSkills = await skillAPI.getSkills();
+//         setSkills(fetchedSkills);
+//       } catch (error) {
+//         console.error('スキル取得エラー:', error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
 
-    fetchSkills();
-  }, []);
+//     fetchSkills();
+//   }, []);
 
-  if (loading) {
-    return <CircularProgress size={24} />;
-  }
+//   if (loading) {
+//     return <CircularProgress size={24} />;
+//   }
 
-  return (
-    <Autocomplete
-      multiple
-      options={skills}
-      value={selectedSkills}
-      getOptionLabel={(option) => option.name}
-      onChange={(_, newValue) => onSkillsChange(newValue)}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label="使用スキル"
-          placeholder="スキルを選択"
-          fullWidth
-        />
-      )}
-      renderTags={(value, getTagProps) =>
-        value.map((option, index) => (
-          <Chip
-            label={option.name}
-            {...getTagProps({ index })}
-            key={option.id}
-          />
-        ))
-      }
-    />
-  );
-};
+//   return (
+//     <Autocomplete
+//       multiple
+//       options={skills}
+//       value={selectedSkills}
+//       getOptionLabel={(option) => option.name}
+//       onChange={(_, newValue) => onSkillsChange(newValue)}
+//       renderInput={(params) => (
+//         <TextField
+//           {...params}
+//           label="使用スキル"
+//           placeholder="スキルを選択"
+//           fullWidth
+//         />
+//       )}
+//       renderTags={(value, getTagProps) =>
+//         value.map((option, index) => (
+//           <Chip
+//             label={option.name}
+//             {...getTagProps({ index })}
+//             key={option.id}
+//           />
+//         ))
+//       }
+//     />
+//   );
+// };
 
 // 文字列配列入力コンポーネント
 const StringArrayInput: React.FC<{
@@ -303,13 +300,13 @@ const WorkExperienceDialog: React.FC<{
     }));
   };
 
-  const handleSelectChange = (e: SelectChangeEvent<string>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  // const handleSelectChange = (e: SelectChangeEvent<string>) => {
+  //   const { name, value } = e.target;
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     [name]: value
+  //   }));
+  // };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
@@ -319,12 +316,12 @@ const WorkExperienceDialog: React.FC<{
     }));
   };
 
-  const handleSkillsChange = (skills: Skill[]) => {
-    setFormData(prev => ({
-      ...prev,
-      skills_used_details: skills
-    }));
-  };
+  // const handleSkillsChange = (skills: Skill[]) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     skills_used_details: skills
+  //   }));
+  // };
 
   const handleOsChange = (values: string[]) => {
     setFormData(prev => ({
