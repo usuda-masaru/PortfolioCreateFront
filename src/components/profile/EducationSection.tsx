@@ -69,10 +69,6 @@ const EducationSection: React.FC<EducationSectionProps> = ({ education }) => {
                   }}
                 >
                   <Typography variant="h6" component="h3" fontWeight="bold">
-                    {edu.degree} - {edu.field_of_study}
-                  </Typography>
-                  
-                  <Typography variant="subtitle1" color="secondary">
                     {edu.institution}
                   </Typography>
                   

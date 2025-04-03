@@ -162,7 +162,7 @@ const Login: React.FC = () => {
                 fontSize: { xs: '1.8rem', sm: '2.2rem' },
               }}
             >
-              ポートフォリオアプリ
+              ポートフォリオ作成支援
             </Typography>
             <Typography 
               variant="h5" 
@@ -185,7 +185,6 @@ const Login: React.FC = () => {
                 }
               }}
             >
-              ログイン
             </Typography>
           </Box>
 

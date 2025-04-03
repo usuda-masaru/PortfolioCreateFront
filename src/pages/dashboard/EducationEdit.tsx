@@ -24,8 +24,6 @@ import { Education } from '../../types/interfaces';
 // 空の学歴データ
 const emptyEducation: Partial<Education> = {
   institution: '',
-  degree: '',
-  field_of_study: '',
   start_date: '',
   end_date: null,
   description: null,
@@ -89,14 +87,6 @@ const EducationDialog: React.FC<{
       newErrors.institution = '学校名は必須です';
     }
     
-    if (!formData.degree?.trim()) {
-      newErrors.degree = '学位は必須です';
-    }
-    
-    if (!formData.field_of_study?.trim()) {
-      newErrors.field_of_study = '専攻は必須です';
-    }
-    
     if (!formData.start_date) {
       newErrors.start_date = '開始日は必須です';
     }
@@ -127,7 +117,7 @@ const EducationDialog: React.FC<{
           
           <Grid item xs={12} md={6}>
             <TextField
-              label="学校名"
+              label="学校名（学科）"
               name="institution"
               value={formData.institution || ''}
               onChange={handleChange}
@@ -135,34 +125,7 @@ const EducationDialog: React.FC<{
               required
               error={!!errors.institution}
               helperText={errors.institution}
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="学位"
-              name="degree"
-              value={formData.degree || ''}
-              onChange={handleChange}
-              fullWidth
-              required
-              error={!!errors.degree}
-              helperText={errors.degree}
-              placeholder="例: 学士（情報工学）、修士（コンピュータサイエンス）"
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="専攻"
-              name="field_of_study"
-              value={formData.field_of_study || ''}
-              onChange={handleChange}
-              fullWidth
-              required
-              error={!!errors.field_of_study}
-              helperText={errors.field_of_study}
-              placeholder="例: 情報工学、コンピュータサイエンス"
+              placeholder="例: 〇〇大学 情報工学部 情報工学科"
             />
           </Grid>
           
@@ -289,7 +252,7 @@ const EducationItem: React.FC<{
               }}
             >
               <SchoolIcon color="secondary" />
-              {education.degree} - {education.field_of_study}
+              {education.institution}
             </Typography>
             
             <Typography 
@@ -299,14 +262,6 @@ const EducationItem: React.FC<{
                 color: theme.palette.secondary.main,
                 fontWeight: 'medium'
               }}
-            >
-              {education.institution}
-            </Typography>
-            
-            <Typography 
-              variant="body2" 
-              color="text.secondary"
-              sx={{ mt: 1 }}
             >
               {formatDateRange(education.start_date, education.end_date)}
             </Typography>
@@ -434,26 +389,37 @@ const EducationEdit: React.FC = () => {
     try {
       setError(null);
       
-      // let savedEducation;
+      // 日付のバリデーション
+      const startDate = new Date(data.start_date || '');
+      const endDate = data.end_date ? new Date(data.end_date) : null;
+      
+      if (endDate && endDate < startDate) {
+        setError('終了日は開始日より後である必要があります。');
+        return;
+      }
+      
+      // end_dateが空文字列の場合はnullに変換
+      const educationData = {
+        institution: data.institution,
+        start_date: data.start_date,
+        end_date: data.end_date === '' ? null : data.end_date,
+        description: data.description,
+        is_visible: data.is_visible
+      };
+      
       if (isNewEducation) {
-        // 新規作成
-        await educationAPI.createEducation(data);
+        await educationAPI.createEducation(educationData);
         setSuccessMessage('学歴情報を新規登録しました。');
       } else {
-        // 更新
-        await educationAPI.updateEducation(data);
+        await educationAPI.updateEducation({ ...educationData, id: data.id });
         setSuccessMessage('学歴情報を更新しました。');
       }
       
-      // 成功メッセージを表示して3秒後に消す
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
       
-      // データを再取得
       fetchEducation();
-      
-      // ダイアログを閉じる
       setDialogOpen(false);
     } catch (err) {
       console.error('学歴の保存に失敗しました', err);

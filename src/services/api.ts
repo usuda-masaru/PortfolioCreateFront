@@ -515,50 +515,35 @@ export const skillAPI = {
 
 // 学歴関連の API 呼び出し
 export const educationAPI = {
-  // 学歴一覧取得
   getEducation: async (): Promise<Education[]> => {
-    try {
-      const response = await api.get<Education[]>('/api/education/');
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch education data', error);
-      throw error;
-    }
+    const response = await api.get<Education[]>('/api/education/');
+    return response.data;
   },
-
-  // 学歴作成
+  
   createEducation: async (data: Partial<Education>): Promise<Education> => {
-    try {
-      const response = await api.post<Education>('/api/education/', data);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to create education', error);
-      throw error;
-    }
+    const response = await api.post<Education>('/api/education/', {
+      institution: data.institution,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      description: data.description,
+      is_visible: data.is_visible
+    });
+    return response.data;
   },
-
-  // 学歴更新
+  
   updateEducation: async (data: Partial<Education>): Promise<Education> => {
-    try {
-      if (!data.id) {
-        throw new Error('Education ID is required for update');
-      }
-      const response = await api.put<Education>(`/api/education/${data.id}/`, data);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to update education', error);
-      throw error;
-    }
+    const response = await api.put<Education>(`/api/education/${data.id}/`, {
+      institution: data.institution,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      description: data.description,
+      is_visible: data.is_visible
+    });
+    return response.data;
   },
-
-  // 学歴削除
+  
   deleteEducation: async (id: number): Promise<void> => {
-    try {
-      await api.delete(`/api/education/${id}/`);
-    } catch (error) {
-      console.error('Failed to delete education', error);
-      throw error;
-    }
+    await api.delete(`/api/education/${id}/`);
   },
 
   // 学歴の順序更新
